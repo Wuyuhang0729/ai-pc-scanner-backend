@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 装机诊断室 - 硬件配置深度评估</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: #3b82f6;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: scan 2s ease-in-out infinite;
+            display: none;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0%;
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        .markdown-content p {
+            margin-bottom: 0.6em;
+            line-height: 1.7;
+        }
+
+        .markdown-content strong {
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .markdown-content ul {
+            list-style-type: disc;
+            padding-left: 1.2em;
+            margin-bottom: 0.6em;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto flex justify-between items-center max-w-4xl">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-microchip text-blue-600 text-2xl"></i>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">AI 装机<span class="text-blue-600">诊断室</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 font-normal">Database
+                        2025</span></h1>
+            </div>
+            <button onclick="toggleSettings()"
+                class="text-slate-500 hover:text-blue-600 text-sm flex items-center gap-1 transition-colors"><i
+                    class="fa-solid fa-gear"></i> 模型设置</button>
+        </div>
+    </nav>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsModal"
+        class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">API 配置</h3>
+            <div class="mb-4 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                <i class="fa-solid fa-triangle-exclamation"></i> 必须配置有效的 DeepSeek API Key 才能进行分析。
+            </div>
+            <label class="block text-slate-700 text-xs font-bold mb-1">API Endpoint (Base URL)</label>
+            <input type="text" id="apiBaseUrl" value="https://api.deepseek.com"
+                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-3 text-sm placeholder-slate-400"
+                placeholder="https://api.deepseek.com">
+            <label class="block text-slate-700 text-xs font-bold mb-1">API Key</label>
+            <input type="password" id="apiKey"
+                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-3 text-sm"
+                placeholder="sk-...">
+            <label class="block text-slate-700 text-xs font-bold mb-1">Model Name</label>
+            <input type="text" id="modelName" value="deepseek-chat"
+                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-4 text-sm">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleSettings()" class="px-4 py-2 text-slate-500 text-sm">取消</button>
+                <button onclick="saveSettings()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        <div class="text-center mb-8 mt-4">
+            <h2 class="text-4xl md:text-5xl font-black mb-3 text-slate-800 tracking-tight">把配置单发给我<br><span
+                    class="text-blue-600">帮你做一次全面体检</span></h2>
+            <p class="text-slate-500 text-sm">内置 2025 最新硬件数据库 · 深度分析 · 拒绝幻觉</p>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-all duration-300">
+            <div class="scan-line" id="scanLine"></div>
+            <textarea id="configInput"
+                class="w-full h-48 bg-white text-slate-700 p-6 focus:outline-none resize-none text-base placeholder-slate-300"
+                placeholder="在此粘贴配置单...
+例：
+CPU: Intel Core Ultra 5 245KF
+显卡: GeForce RTX 5060
+内存: 32G DDR5
+硬盘: Samsung 9100 PRO 2TB"></textarea>
+
+            <!-- 识别结果展示栏 -->
+            <div id="detectedHardwareBar"
+                class="hidden px-6 py-3 bg-blue-50 border-t border-blue-100 text-xs text-blue-800 flex flex-col gap-2">
+                <div class="flex items-center gap-2 font-bold text-blue-600 uppercase tracking-wider">
+                    <i class="fa-solid fa-microchip"></i> 系统已识别硬件 (将注入 AI 上下文)
+                </div>
+                <div id="detectedTags" class="flex flex-wrap gap-2 mt-1"></div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                <div class="text-xs text-slate-400 flex gap-2">
+                    <span id="dbStatus"><i class="fa-solid fa-database"></i> 2025 数据库已就绪</span>
+                </div>
+                <button onclick="startAnalysis()" id="scanBtn"
+                    class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-microscope"></i> 开始体检
+                </button>
+            </div>
+        </div>
+
+        <!-- 错误提示区域 -->
+        <div id="errorArea" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+            role="alert">
+            <strong class="font-bold">分析失败！</strong>
+            <span class="block sm:inline" id="errorText"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3"
+                onclick="document.getElementById('errorArea').classList.add('hidden')">
+                <i class="fa-solid fa-times cursor-pointer"></i>
+            </span>
+        </div>
+
+        <!-- 结果区域 -->
+        <div id="resultArea" class="hidden mt-8 transition-opacity duration-500 opacity-0">
+            <!-- 仪表盘 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- 综合评分 -->
+                <div
+                    class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">综合评分 (0-150)</p>
+                    <div class="relative">
+                        <div class="text-6xl font-black text-slate-800 tracking-tighter mb-1" id="scoreDisplay">--</div>
+                        <div id="prefTag"
+                            class="hidden absolute -top-2 -right-12 bg-pink-100 text-pink-600 text-[10px] font-bold px-2 py-0.5 rounded-full transform rotate-12 border border-pink-200">
+                            <i class="fa-solid fa-heart"></i> 偏好加成
+                        </div>
+                    </div>
+                    <div id="verdictBadge"
+                        class="px-4 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 mt-2">分析中</div>
+                </div>
+
+                <!-- 雷达图 -->
+                <div
+                    class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col items-center justify-center col-span-2">
+                    <div class="w-full h-48 flex items-center justify-center">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细报告 -->
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6 relative">
+                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-2xl"></div>
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                    <i class="fa-solid fa-clipboard-check text-blue-600"></i> 诊断报告
+                </h3>
+                <div id="aiSummary"
+                    class="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed markdown-content"></div>
+
+                <div id="aiModulesContainer" class="space-y-3 mt-6"></div>
+            </div>
+
+            <!-- 底部声明 -->
+            <div class="text-center">
+                <p class="text-xs text-slate-400">评分依据：本地权威数据库 (2025 Hardware DB) + DeepSeek 深度推理</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. 硬件数据库 (HARDWARE_DB) - 全面提炼
+        // ==========================================
+        const HARDWARE_DB = {
+            // --- GPU (Data extracted from datatable 1 & 2) ---
+            "rtx 6000 blackwell": { name: "RTX PRO 6000 Blackwell", score: 42223, price: "N/A", type: "GPU" },
+            "5090 d": { name: "GeForce RTX 5090 D", score: 40831, price: "N/A", type: "GPU" },
+            "5090": { name: "GeForce RTX 5090", score: 38837, price: 2999.99, type: "GPU" },
+            "4090": { name: "GeForce RTX 4090", score: 38113, price: 2352.33, type: "GPU" },
+            "5080": { name: "GeForce RTX 5080", score: 35875, price: 1199.99, type: "GPU" },
+            "5060 ti": { name: "GeForce RTX 5060 Ti 8GB", score: 22631, price: 332.99, type: "GPU" },
+            "5060": { name: "GeForce RTX 5060", score: 20844, price: 285.99, type: "GPU" },
+            "9060": { name: "Radeon RX 9060 XT 8GB", score: 19863, price: 289.99, type: "GPU" },
+            "4060": { name: "GeForce RTX 4060", score: 19545, price: 299.99, type: "GPU" },
+            "5050": { name: "GeForce RTX 5050", score: 17154, price: 249.99, type: "GPU" },
+            "7600": { name: "Radeon RX 7600", score: 16594, price: 259.99, type: "GPU" },
+            "6700 xt": { name: "Radeon RX 6700 XT", score: 2200, price: 210.92, type: "GPU" },
+            "titan black": { name: "GeForce GTX TITAN Black", score: 9191, price: 1324.33, type: "GPU" },
+
+            // --- CPU (Data extracted from datatable 3, 4, 7) ---
+            "5975wx": { name: "Threadripper PRO 5975WX", score: 75012, price: 1840.00, type: "CPU" },
+            "ultra 7 265k": { name: "Intel Core Ultra 7 265K", score: 58766, price: 292.00, type: "CPU" },
+            "7532": { name: "AMD EPYC 7532", score: 50726, price: 225.00, type: "CPU" },
+            "ultra 5 245kf": { name: "Intel Core Ultra 5 245KF", score: 43391, price: 214.99, type: "CPU" },
+            "5500": { name: "AMD Ryzen 5 5500", score: 19311, price: 74.99, type: "CPU" },
+            "4500": { name: "AMD Ryzen 5 4500", score: 16044, price: 68.14, type: "CPU" },
+            "14100t": { name: "Intel Core i3-14100T", score: 13614, price: 356.25, type: "CPU" },
+            "9900x3d": { name: "AMD Ryzen 9 9900X3D", score: 12441, price: "N/A", type: "CPU" },
+            "9800x3d": { name: "AMD Ryzen 7 9800X3D", score: 12125, price: "N/A", type: "CPU" },
+            "9950x3d": { name: "AMD Ryzen 9 9950X3D", score: 11254, price: "N/A", type: "CPU" },
+            "7900x3d": { name: "AMD Ryzen 9 7900X3D", score: 10796, price: "N/A", type: "CPU" },
+            "ai 9 hx 375": { name: "AMD Ryzen AI 9 HX 375", score: 3262, price: "N/A", type: "CPU" },
+
+            // --- SSD (Data extracted from datatable 5 & 6) ---
+            "9100 pro": { name: "Samsung 9100 PRO 2TB", score: 86443, price: 219.34, type: "SSD" },
+            "sn850x": { name: "WD BLACK SN850X", score: 51571, price: 289.99, type: "SSD" },
+            "sn7100": { name: "WD BLACK SN7100", score: 51667, price: 270.45, type: "SSD" },
+            "p3": { name: "Crucial P3 1TB", score: 22363, price: 119.90, type: "SSD" },
+            "sa400": { name: "Kingston SA400", score: 2908, price: "N/A", type: "SSD" },
+            "bx500": { name: "CT240BX500SSD1", score: 2765, price: 40.99, type: "SSD" }
+        };
+
+        // 别名映射
+        const ALIAS_MAP = {
+            "ultra 5": "ultra 5 245kf",
+            "ultra 7": "ultra 7 265k",
+            "rtx4060": "4060",
+            "rtx5060": "5060",
+            "9900x": "9900x3d",
+            "14100": "14100t",
+            "12600": "12600kf",
+            "13600": "13600kf"
+        };
+
+        // ==========================================
+        // 2. 配置与工具函数
+        // ==========================================
+        const DEFAULT_CONFIG = { baseUrl: "https://api.deepseek.com", apiKey: "", model: "deepseek-chat" };
+        let radarChart = null;
+
+        function loadConfig() { return JSON.parse(localStorage.getItem('ai_config')) || DEFAULT_CONFIG; }
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            const cfg = loadConfig();
+            document.getElementById('apiBaseUrl').value = cfg.baseUrl;
+            document.getElementById('apiKey').value = cfg.apiKey;
+            document.getElementById('modelName').value = cfg.model;
+            modal.classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            const config = {
+                baseUrl: document.getElementById('apiBaseUrl').value,
+                apiKey: document.getElementById('apiKey').value,
+                model: document.getElementById('modelName').value
+            };
+            localStorage.setItem('ai_config', JSON.stringify(config));
+            toggleSettings();
+        }
+
+        // ==========================================
+        // 3. 核心逻辑：智能匹配与上下文注入
+        // ==========================================
+
+        function extractHardwareContext(text) {
+            let lowerText = text.toLowerCase().replace(/\s+/g, ' ');
+            let matches = [];
+            let matchedKeys = new Set();
+
+            // 1. 别名匹配
+            for (const [alias, realKey] of Object.entries(ALIAS_MAP)) {
+                if (lowerText.includes(alias)) {
+                    if (!matchedKeys.has(realKey)) {
+                        const item = HARDWARE_DB[realKey];
+                        if (item) {
+                            matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: $${item.price} (识别自 "${alias}")`);
+                            matchedKeys.add(realKey);
+                        }
+                    }
+                }
+            }
+
+            // 2. 精确/模糊匹配 (最长优先)
+            const sortedKeys = Object.keys(HARDWARE_DB).sort((a, b) => b.length - a.length);
+
+            sortedKeys.forEach(key => {
+                if (lowerText.includes(key) && !matchedKeys.has(key)) {
+                    // 防止 "5060" 匹配到 "5060 ti" 的子串
+                    const isAlreadyCovered = Array.from(matchedKeys).some(k => k.includes(key) && k !== key);
+
+                    if (!isAlreadyCovered) {
+                        const item = HARDWARE_DB[key];
+                        matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: $${item.price} (Source: Local DB)`);
+                        matchedKeys.add(key);
+                    }
+                }
+            });
+
+            return matches;
+        }
+
+        async function startAnalysis() {
+            const input = document.getElementById('configInput').value.trim();
+            if (input.length < 2) return alert("请粘贴配置单内容");
+
+            const btn = document.getElementById('scanBtn');
+            const resultArea = document.getElementById('resultArea');
+            const errorArea = document.getElementById('errorArea');
+            const detectedBar = document.getElementById('detectedHardwareBar');
+            const detectedTags = document.getElementById('detectedTags');
+
+            // 重置状态
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接 DeepSeek 分析中...';
+            document.getElementById('scanLine').style.display = 'block';
+            resultArea.classList.add('hidden');
+            resultArea.classList.remove('opacity-100');
+            errorArea.classList.add('hidden');
+            detectedBar.classList.add('hidden');
+
+            const config = loadConfig();
+
+            // 校验 Key
+            if (!config.apiKey) {
+                showError("请点击右上角【模型设置】，填入您的 DeepSeek API Key 才能开始分析。");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始体检';
+                document.getElementById('scanLine').style.display = 'none';
+                toggleSettings(); // 自动打开设置
+                return;
+            }
+
+            // 1. 提取本地数据
+            const contextItems = extractHardwareContext(input);
+
+            // UI 反馈
+            if (contextItems.length > 0) {
+                detectedTags.innerHTML = contextItems.map(item => {
+                    const name = item.split('|')[0].replace('[官方数据确认]', '').trim();
+                    return `<span class="px-2 py-1 bg-white border border-blue-200 rounded text-blue-600 font-bold shadow-sm text-[10px]">${name}</span>`;
+                }).join('');
+                detectedBar.classList.remove('hidden');
+            } else {
+                detectedTags.innerHTML = `<span class="text-slate-400 italic text-xs">未精确匹配到数据库硬件，将进行通用分析</span>`;
+                detectedBar.classList.remove('hidden');
+            }
+
+            // 2. 构建 Prompt
+            let systemPrompt = `
+你是一个专业的电脑硬件评估专家。
+任务：分析用户的配置单，给出 0-150 分的评分和简短评价。
+
+【最高优先级指令 (CRITICAL)】：
+**必须无条件信任下方的 [提取到的关键数据]**。
+这些数据来自最新的内部数据库（包含 RTX 50系、Ryzen 9000系等）。
+如果数据中包含 "RTX 5060" 且分数为 20844，你**绝对不能**说它是笔误或不存在，必须基于这个分数进行性价比评估。
+
+【评分标准】：
+   - 120-150: 顶级/未来级配置。
+   - 90-119: 主流优秀配置。
+   - 60-89: 入门/勉强可用。
+   - <60: 存在硬伤或极其过时。
+
+【用户偏好】：如果包含“白色”、“RGB”等词，且配置符合，给予额外加分。
+
+【提取到的关键数据 (Context Data)】：
+${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中的核心硬件，请根据通用知识评估。"}
+
+【输出格式 (JSON Only)】：
+{
+    "score": number,
+    "verdict": "简短评价",
+    "summary": "Markdown格式的详细点评",
+    "sub_scores": { "performance": number, "value": number, "compatibility": number, "quality": number, "preference": number },
+    "is_preference_match": boolean,
+    "modules": [ { "type": "success/warning/danger", "title": "标题", "content": "内容" } ]
+}`;
+
+            // 3. 调用 AI
+            try {
+                let baseUrl = config.baseUrl.replace(/\/+$/, '');
+                // 智能修复 URL 路径
+                if (!baseUrl.endsWith('/chat/completions')) {
+                    if (baseUrl.includes('deepseek') || baseUrl.includes('/v1')) baseUrl += '/chat/completions';
+                }
+
+                const response = await fetch(baseUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: input }
+                        ],
+                        temperature: 0.5,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`API 请求失败 (${response.status}): ${errText}`);
+                }
+
+                const data = await response.json();
+                const jsonStr = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+                renderUI(JSON.parse(jsonStr));
+
+            } catch (error) {
+                console.error("API Error:", error);
+                let msg = error.message;
+                if (error.name === 'TypeError' && msg.includes('Failed to fetch')) {
+                    msg = "网络请求失败。<br>可能原因：<br>1. 浏览器跨域限制 (CORS)：DeepSeek API 官方不支持浏览器直连，请使用支持跨域的 API 代理。<br>2. 网络连接不通。<br>3. API 地址填写错误。<br><br>建议检查 API 配置或网络环境。";
+                }
+                showError(msg);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始体检';
+                document.getElementById('scanLine').style.display = 'none';
+            }
+        }
+
+        function showError(msg) {
+            const errorArea = document.getElementById('errorArea');
+            const errorText = document.getElementById('errorText');
+            errorText.innerHTML = msg;
+            errorArea.classList.remove('hidden');
+        }
+
+        // ==========================================
+        // 4. UI 渲染
+        // ==========================================
+        function renderUI(data) {
+            const area = document.getElementById('resultArea');
+            area.classList.remove('hidden');
+            void area.offsetWidth;
+            area.classList.add('opacity-100');
+
+            const scoreEl = document.getElementById('scoreDisplay');
+            const badgeEl = document.getElementById('verdictBadge');
+            let color = data.score >= 120 ? "text-emerald-500" : (data.score >= 90 ? "text-blue-500" : "text-red-500");
+            let badgeColor = data.score >= 120 ? "bg-emerald-100 text-emerald-700" : (data.score >= 90 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700");
+
+            badgeEl.innerText = data.verdict;
+
+            scoreEl.className = `text-6xl font-black tracking-tighter mb-1 ${color}`;
+            scoreEl.innerText = data.score;
+            badgeEl.className = `px-4 py-1 rounded-full text-xs font-bold mt-2 ${badgeColor}`;
+
+            if (data.is_preference_match) document.getElementById('prefTag').classList.remove('hidden');
+            else document.getElementById('prefTag').classList.add('hidden');
+
+            document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
+
+            const modContainer = document.getElementById('aiModulesContainer');
+            modContainer.innerHTML = '';
+            if (data.modules) {
+                data.modules.forEach(m => {
+                    const styles = {
+                        success: { icon: 'fa-check-circle', color: 'text-emerald-500', border: 'border-emerald-100', bg: 'bg-emerald-50' },
+                        warning: { icon: 'fa-exclamation-triangle', color: 'text-amber-500', border: 'border-amber-100', bg: 'bg-amber-50' },
+                        danger: { icon: 'fa-times-circle', color: 'text-red-500', border: 'border-red-100', bg: 'bg-red-50' }
+                    }[m.type] || { icon: 'fa-info-circle', color: 'text-blue-500', border: 'border-blue-100', bg: 'bg-blue-50' };
+
+                    const div = document.createElement('div');
+                    div.className = `p-4 rounded-lg border ${styles.border} ${styles.bg} flex gap-3`;
+                    div.innerHTML = `<i class="fa-solid ${styles.icon} ${styles.color} mt-1"></i><div><h4 class="font-bold text-sm text-slate-700">${m.title}</h4><div class="text-sm text-slate-600 markdown-content">${marked.parse(m.content)}</div></div>`;
+                    modContainer.appendChild(div);
+                });
+            }
+
+            if (radarChart) radarChart.destroy();
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['性能', '性价比', '兼容性', '品质', '偏好'],
+                    datasets: [{
+                        label: '得分',
+                        data: [data.sub_scores.performance, data.sub_scores.value, data.sub_scores.compatibility, data.sub_scores.quality, data.sub_scores.preference],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    scales: { r: { suggestedMin: 0, suggestedMax: 150, ticks: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
