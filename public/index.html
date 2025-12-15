@@ -179,10 +179,15 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* [优化] Markdown 增强排版：内容分隔与高亮 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 700;
-            transition: color var(--duration-theme) var(--ease-out-quart);
+            background-color: var(--c-input-bg);
+            /* 荧光笔背景感 */
+            padding: 0 2px;
+            border-radius: 2px;
+            transition: all var(--duration-theme) var(--ease-out-quart);
         }
 
         .markdown-content p {
@@ -201,16 +206,32 @@
             margin-bottom: 0.5em;
         }
 
-        .markdown-content h3 {
-            font-size: 1.2em;
+        /* 标题下划线分隔 */
+        .markdown-content h3,
+        .markdown-content h2 {
+            font-size: 1.15em;
             font-weight: 800;
             margin-top: 1.5em;
-            margin-bottom: 0.75em;
+            margin-bottom: 0.8em;
             color: var(--c-text-head);
-            border-bottom: 2px solid var(--c-border);
-            padding-bottom: 0.25em;
-            display: inline-block;
-            transition: color var(--duration-theme) var(--ease-out-quart);
+            border-bottom: 1px dashed var(--c-border);
+            /* 虚线分隔 */
+            padding-bottom: 0.3em;
+            display: block;
+            transition: all var(--duration-theme) var(--ease-out-quart);
+        }
+
+        /* 引用块样式 */
+        .markdown-content blockquote {
+            border-left: 3px solid var(--c-primary);
+            padding-left: 1em;
+            margin-left: 0;
+            color: var(--c-text-mute);
+            font-style: italic;
+            background-color: var(--c-input-bg);
+            padding: 0.8em 1em;
+            border-radius: 0 0.5em 0.5em 0;
+            margin-bottom: 1em;
         }
 
         .cursor-blink {
@@ -459,13 +480,13 @@
     <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative z-10">
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
-                输入配置设备<br>
+                把配置单发给我<br>
                 <span style="color: var(--c-primary); transition: color 0.4s var(--ease-out-quart);">
                     深度评估硬件实力
                 </span>
             </h2>
             <p class="ui-text-mute text-sm md:text-base max-w-2xl mx-auto">
-                基于 2025 权威硬件数据库 · AI 驱动深度分析 · 专业诊断报告
+                基于 2025 权威硬件数据库 · 区分客观性能与个人偏好
             </p>
         </div>
 
@@ -522,11 +543,11 @@ CPU: Intel Core Ultra 5 245KF
                         <div class="flex justify-between items-start mb-4 relative">
                             <div class="flex items-center gap-2">
                                 <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
-                                <!-- [新增] 评分规则触发器 -->
+                                <!-- 评分规则触发器 -->
                                 <div class="relative group">
                                     <i
                                         class="fa-regular fa-circle-question text-xs ui-text-mute cursor-help rules-trigger hover:text-blue-500 transition-colors"></i>
-                                    <!-- [新增] 评分规则悬浮面板 -->
+                                    <!-- 评分规则悬浮面板 -->
                                     <div class="rules-popover">
                                         <div
                                             class="text-[10px] font-bold ui-heading mb-2 border-b border-dashed border-gray-200 pb-1">
@@ -552,7 +573,7 @@ CPU: Intel Core Ultra 5 245KF
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
                             <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
-                            <!-- [修改] 分母改为 100，创造“爆表”感 -->
+                            <!-- 分母改为 100 -->
                             <span class="text-lg ui-text-mute font-medium">/ 100</span>
                         </div>
 
@@ -637,6 +658,13 @@ CPU: Intel Core Ultra 5 245KF
                 <!-- 容器用于流式打字 -->
                 <div id="aiSummary"
                     class="prose prose-slate dark:prose-invert prose-lg max-w-none ui-heading leading-relaxed markdown-content">
+                </div>
+
+                <!-- [新增] 免责声明 -->
+                <div class="mt-6 pt-4 border-t border-dashed" style="border-color: var(--c-border)">
+                    <p class="text-[10px] ui-text-mute text-center opacity-70">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> 内容由AI生成，分析结果可能不准确，请结合实际自行判断
+                    </p>
                 </div>
             </div>
 
