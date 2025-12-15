@@ -14,165 +14,64 @@
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <!-- 引入 CountUp.js 用于数字滚动 -->
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js"></script>
     <script src="hardware_data.js" defer></script>
 
+    <!-- 
+        [核心] 样式系统 
+        这里的 CSS 变量初始值由 JS 在运行时注入，
+        CSS 仅负责定义使用这些变量的规则。
+    -->
     <style>
-        /* ================= [Design System] 全局色调定义 ================= */
-        :root {
-            /* --- 基础蓝调 (Base Palette) --- */
-            --c-page-bg: #f1f5f9;
-            /* Slate-100: 极淡的灰蓝底色 */
-            --c-card-bg: #ffffff;
-            --c-nav-bg: rgba(255, 255, 255, 0.95);
-
-            --c-text-main: #334155;
-            /* Slate-700 */
-            --c-text-head: #0f172a;
-            /* Slate-900 */
-            --c-text-mute: #64748b;
-            /* Slate-500 */
-            --c-primary: #2563eb;
-            /* Blue-600: 核心主色 */
-
-            --c-border: #e2e8f0;
-            /* Slate-200 */
-            --c-input-bg: #f8fafc;
-            /* Slate-50 */
-
-            /* --- 状态色 (State Colors) - 融入蓝调，降低饱和度 --- */
-            /* Success: 青碧色 (Teal/Emerald 混蓝) */
-            --s-success-bg: #ecfdf5;
-            /* Emerald-50 */
-            --s-success-text: #059669;
-            /* Emerald-600 */
-            --s-success-border: #d1fae5;
-            /* Emerald-100 */
-
-            /* Warning: 暖金 (Amber) - 避免刺眼黄 */
-            --s-warning-bg: #fffbeb;
-            /* Amber-50 */
-            --s-warning-text: #b45309;
-            /* Amber-700 */
-            --s-warning-border: #fef3c7;
-            /* Amber-100 */
-
-            /* Danger: 玫瑰红 (Rose) - 比纯红更冷，契合蓝调 */
-            --s-danger-bg: #fff1f2;
-            /* Rose-50 */
-            --s-danger-text: #be123c;
-            /* Rose-700 */
-            --s-danger-border: #ffe4e6;
-            /* Rose-100 */
-
-            /* Info/Highlight: 靛蓝 (Indigo) - 用于偏好/高亮 */
-            --s-info-bg: #e0e7ff;
-            /* Indigo-100 */
-            --s-info-text: #3730a3;
-            /* Indigo-800 */
-            --s-info-border: #c7d2fe;
-            /* Indigo-200 */
-
-            /* --- 阴影系统 --- */
-            --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
-            --shadow-glow: 0 0 15px rgba(37, 99, 235, 0.15);
-            /* 蓝色微光 */
-        }
-
-        /* --- 深色模式 (Dark Mode) --- */
-        html.dark {
-            --c-page-bg: #020617;
-            /* Slate-950: 深邃夜空蓝 */
-            --c-card-bg: #0f172a;
-            /* Slate-900 */
-            --c-nav-bg: rgba(15, 23, 42, 0.95);
-
-            --c-text-main: #cbd5e1;
-            /* Slate-300 */
-            --c-text-head: #f8fafc;
-            /* Slate-50 */
-            --c-text-mute: #94a3b8;
-            /* Slate-400 */
-            --c-primary: #60a5fa;
-            /* Blue-400: 夜间更明亮的主色 */
-
-            --c-border: #1e293b;
-            /* Slate-800 */
-            --c-input-bg: #020617;
-
-            /* 状态色 - 夜间模式 (加深背景，提亮文字) */
-            --s-success-bg: #064e3b;
-            /* Emerald-900 */
-            --s-success-text: #6ee7b7;
-            /* Emerald-300 */
-            --s-success-border: #065f46;
-            /* Emerald-800 */
-
-            --s-warning-bg: #451a03;
-            /* Amber-950 */
-            --s-warning-text: #fcd34d;
-            /* Amber-300 */
-            --s-warning-border: #78350f;
-            /* Amber-900 */
-
-            --s-danger-bg: #4c0519;
-            /* Rose-950 */
-            --s-danger-text: #fda4af;
-            /* Rose-300 */
-            --s-danger-border: #881337;
-            /* Rose-900 */
-
-            --s-info-bg: #312e81;
-            /* Indigo-900 */
-            --s-info-text: #c7d2fe;
-            /* Indigo-200 */
-            --s-info-border: #4338ca;
-            /* Indigo-800 */
-
-            /* 阴影 - 增强深度 */
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 20px rgba(96, 165, 250, 0.15);
-        }
-
-        /* ================= 全局重置 ================= */
+        /* ================= 基础过渡与排版 ================= */
         body {
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--c-page-bg);
             color: var(--c-text-main);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            /* 关键：让颜色变化平滑，但不要太慢 */
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ================= 组件库 (UI Kit) ================= */
+        /* ================= 组件微交互 (Micro-interactions) ================= */
 
-        /* 1. 卡片 */
+        /* 1. 物理感卡片 */
         .ui-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 复合变换：位置+阴影+边框 */
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease,
+                background-color 0.3s ease;
         }
 
-        /* 2. 导航栏 */
-        .ui-nav {
-            background-color: var(--c-nav-bg);
-            border-bottom: 1px solid var(--c-border);
-            backdrop-filter: blur(12px);
+        .ui-card:hover {
+            transform: translateY(-4px);
+            /* 悬浮抬起 */
+            box-shadow: var(--shadow-hover);
+            /* 阴影加深 */
+            border-color: var(--c-primary-light);
+            /* 边框微亮 */
         }
 
-        /* 3. 输入框 */
+        /* 2. 呼吸感输入框 */
         .ui-input {
             background-color: var(--c-input-bg);
             border: 1px solid var(--c-border);
             color: var(--c-text-head);
             border-radius: 0.75rem;
-            transition: all 0.3s;
+            transition: all 0.3s ease-out;
         }
 
         .ui-input:focus {
             border-color: var(--c-primary);
-            box-shadow: var(--shadow-glow);
+            background-color: var(--c-card-bg);
+            box-shadow: 0 0 0 4px var(--c-focus-ring);
+            /* 柔和光晕 */
             outline: none;
         }
 
@@ -181,20 +80,27 @@
             opacity: 0.6;
         }
 
-        /* 4. 按钮 */
+        /* 3. 按钮点击反馈 */
         .ui-btn-primary {
             background-color: var(--c-primary);
             color: #ffffff;
             font-weight: 600;
             border-radius: 0.75rem;
             box-shadow: var(--shadow-sm);
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .ui-btn-primary:hover {
-            filter: brightness(1.1);
+            background-color: var(--c-primary-hover);
             transform: translateY(-1px);
-            box-shadow: var(--shadow-glow);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .ui-btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: none;
         }
 
         .ui-btn-primary:disabled {
@@ -203,66 +109,131 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
-            filter: none;
         }
 
-        .ui-btn-icon {
-            background-color: var(--c-input-bg);
-            color: var(--c-text-mute);
-            border: 1px solid var(--c-border);
-            border-radius: 9999px;
-            transition: all 0.2s;
+        /* ================= 电影感入场动画 (Cinematic Reveal) ================= */
+
+        /* 基础隐藏状态 */
+        .reveal-hidden {
+            opacity: 0;
+            visibility: hidden;
         }
 
-        .ui-btn-icon:hover {
-            color: var(--c-primary);
-            border-color: var(--c-primary);
-            background-color: var(--c-card-bg);
+        /* 1. 弹跳入场 (Pop Up) - 用于总分卡片 */
+        @keyframes popUp {
+            0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            60% {
+                opacity: 1;
+                transform: scale(1.02) translateY(-5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
-        /* 5. 状态模块 (Success/Warning/Danger) */
-        .state-success {
-            background-color: var(--s-success-bg);
-            border: 1px solid var(--s-success-border);
-            color: var(--s-success-text);
+        .animate-pop-up {
+            animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            visibility: visible;
         }
 
-        .state-warning {
-            background-color: var(--s-warning-bg);
-            border: 1px solid var(--s-warning-border);
-            color: var(--s-warning-text);
+        /* 2. 展开入场 (Scale Unfold) - 用于雷达图 */
+        @keyframes unfold {
+            0% {
+                opacity: 0;
+                transform: scaleY(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
         }
 
-        .state-danger {
-            background-color: var(--s-danger-bg);
-            border: 1px solid var(--s-danger-border);
-            color: var(--s-danger-text);
+        .animate-unfold {
+            animation: unfold 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            visibility: visible;
         }
 
-        .state-info {
-            background-color: var(--c-input-bg);
-            border: 1px solid var(--c-border);
-            color: var(--c-primary);
+        /* 3. 滑动入场 (Slide Up) - 用于列表项 */
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* 6. 标签 (Tags) */
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+            visibility: visible;
+        }
+
+        /* 延迟类 Utility */
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+
+        .delay-400 {
+            animation-delay: 400ms;
+        }
+
+        .delay-500 {
+            animation-delay: 500ms;
+        }
+
+        /* 列表项交错动画生成 (支持到 10 个项目) */
+        .stagger-item:nth-child(1) {
+            animation-delay: 400ms;
+        }
+
+        .stagger-item:nth-child(2) {
+            animation-delay: 500ms;
+        }
+
+        .stagger-item:nth-child(3) {
+            animation-delay: 600ms;
+        }
+
+        .stagger-item:nth-child(4) {
+            animation-delay: 700ms;
+        }
+
+        .stagger-item:nth-child(5) {
+            animation-delay: 800ms;
+        }
+
+        /* ================= 辅助类 ================= */
+        .ui-nav {
+            background-color: var(--c-nav-bg);
+            border-bottom: 1px solid var(--c-border);
+            backdrop-filter: blur(12px);
+        }
+
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
             border: 1px solid var(--c-border);
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
             font-weight: 500;
         }
 
-        .ui-tag-bonus {
-            background-color: var(--s-info-bg);
-            color: var(--s-info-text);
-            border: 1px solid var(--s-info-border);
-            font-weight: 700;
-        }
-
-        /* 7. 排版 */
         .ui-heading {
             color: var(--c-text-head);
         }
@@ -275,21 +246,20 @@
             color: var(--c-text-mute);
         }
 
-        /* Markdown 内容适配 */
+        /* Markdown 适配 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 600;
         }
 
         .markdown-content p {
-            margin-bottom: 0.5em;
+            margin-bottom: 0.6em;
             line-height: 1.6;
         }
 
         .markdown-content ul {
             list-style-type: disc;
             padding-left: 1.2em;
-            margin-bottom: 0.5em;
             color: var(--c-text-mute);
         }
 
@@ -303,16 +273,52 @@
 
         .progress-fill {
             height: 100%;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
             background-color: var(--c-primary);
         }
 
-        /* 独立装饰窗口 */
-        .summary-window {
-            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 60%);
+        /* 状态色映射 */
+        .state-success {
+            background: var(--s-success-bg);
+            border-color: var(--s-success-border);
+            color: var(--s-success-text);
         }
 
-        /* 动画与滚动条 */
+        .state-warning {
+            background: var(--s-warning-bg);
+            border-color: var(--s-warning-border);
+            color: var(--s-warning-text);
+        }
+
+        .state-danger {
+            background: var(--s-danger-bg);
+            border-color: var(--s-danger-border);
+            color: var(--s-danger-text);
+        }
+
+        .state-info {
+            background: var(--c-input-bg);
+            border-color: var(--c-border);
+            color: var(--c-text-main);
+        }
+
+        /* 装饰背景 */
+        .summary-window {
+            background-image: radial-gradient(circle at top right, var(--c-glow), transparent 70%);
+        }
+
+        /* Loading 动画 */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* 滚动条 */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -325,36 +331,13 @@
             background: var(--c-border);
             border-radius: 3px;
         }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-spin {
-            animation: spin 1s linear infinite;
-        }
     </style>
-
-    <script>
-        // 极速主题初始化
-        (function () {
-            try {
-                const stored = localStorage.getItem('theme');
-                const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const h = new Date().getHours();
-                let mode = stored ? stored : (sysDark ? 'dark' : (h >= 18 || h < 6 ? 'dark' : 'light'));
-                if (mode === 'dark') document.documentElement.classList.add('dark');
-            } catch (e) { }
-        })();
-    </script>
 </head>
 
 <body class="min-h-screen flex flex-col">
 
     <!-- 导航栏 -->
-    <nav class="ui-nav p-4 sticky top-0 z-50">
+    <nav class="ui-nav p-4 sticky top-0 z-50 transition-colors duration-300">
         <div class="container mx-auto flex justify-between items-center max-w-5xl">
             <div class="flex items-center gap-4 shrink-0">
                 <div class="flex items-center space-x-2">
@@ -365,23 +348,17 @@
                             class="ui-text-highlight">诊断室</span></h1>
                 </div>
 
-                <button id="themeToggleBtn" class="ui-btn-icon w-9 h-9 flex items-center justify-center ml-2"
-                    aria-label="切换黑夜模式">
-                    <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
-                        </path>
-                    </svg>
-                    <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
-                        </path>
-                    </svg>
+                <!-- 主题切换按钮 -->
+                <button id="themeToggleBtn"
+                    class="w-9 h-9 flex items-center justify-center rounded-full border border-transparent hover:border-current transition-all text-slate-400 hover:text-blue-500"
+                    aria-label="切换模式">
+                    <i class="fa-solid fa-sun dark:hidden"></i>
+                    <i class="fa-solid fa-moon hidden dark:block"></i>
                 </button>
             </div>
 
             <div class="flex items-center gap-3">
-                <span class="ui-tag px-3 py-1 hidden sm:inline-block bg-white dark:bg-slate-800">
+                <span class="ui-tag px-3 py-1 rounded-full text-xs hidden sm:inline-block">
                     <i class="fa-solid fa-database mr-1 ui-text-highlight"></i> DB 2025
                 </span>
             </div>
@@ -389,11 +366,10 @@
     </nav>
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl">
-        <div class="text-center mb-10 mt-6">
+        <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
                 把配置单发给我<br>
-                <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                <span style="color: var(--c-primary); transition: color 0.3s;">
                     深度评估硬件实力
                 </span>
             </h2>
@@ -403,7 +379,7 @@
         </div>
 
         <!-- 输入卡片 -->
-        <div class="ui-card overflow-hidden">
+        <div class="ui-card overflow-hidden animate-slide-up delay-100">
             <textarea id="configInput"
                 class="w-full h-40 ui-input p-6 resize-none text-base font-mono border-0 rounded-none bg-transparent"
                 placeholder="在此粘贴配置单...
@@ -414,14 +390,14 @@ CPU: Intel Core Ultra 5 245KF
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
             <div id="detectedHardwareBar"
-                class="hidden border-t border-slate-100 dark:border-slate-700 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors"
-                style="background-color: var(--c-input-bg);">
+                class="hidden border-t px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors"
+                style="border-color: var(--c-border); background-color: var(--c-input-bg);">
                 <span class="text-[10px] font-bold ui-text-mute uppercase tracking-wider mr-2">Detected:</span>
                 <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div
-                class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-900/50">
+            <div class="p-4 border-t flex justify-between items-center"
+                style="border-color: var(--c-border); background-color: var(--c-card-bg);">
                 <div class="text-xs ui-text-mute flex items-center gap-2">
                     <span id="dbStatus" class="flex items-center gap-1.5"><i
                             class="fa-solid fa-spinner loading-spin"></i> 正在加载数据库...</span>
@@ -433,7 +409,8 @@ CPU: Intel Core Ultra 5 245KF
             </div>
         </div>
 
-        <div id="errorArea" class="hidden mt-6 state-danger p-4 rounded-xl shadow-sm relative flex items-start gap-3">
+        <div id="errorArea"
+            class="hidden mt-6 state-danger p-4 rounded-xl shadow-sm relative flex items-start gap-3 animate-slide-up">
             <i class="fa-solid fa-circle-exclamation mt-1"></i>
             <div>
                 <strong class="font-bold block mb-1">分析中断</strong>
@@ -445,40 +422,41 @@ CPU: Intel Core Ultra 5 245KF
             </button>
         </div>
 
-        <div id="resultArea" class="hidden mt-10 transition-all duration-700 opacity-0 transform translate-y-4">
+        <!-- 结果展示区 -->
+        <div id="resultArea" class="hidden mt-10">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                <!-- 总分卡片 -->
-                <div
-                    class="lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
+                <!-- 1. 总分卡片 (Pop Up) -->
+                <div id="card-score"
+                    class="reveal-hidden lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
                             <div id="verdictBadge"
-                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 ui-text-mute">
+                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 ui-text-mute transition-colors">
                                 --</div>
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
-                            <span class="text-7xl font-black tracking-tighter ui-heading transition-colors"
-                                id="scoreDisplay">--</span>
+                            <!-- 这里的 ID 用于 CountUp.js 滚动动画 -->
+                            <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
                             <span class="text-lg ui-text-mute font-medium">/ 150</span>
                         </div>
 
                         <div id="prefContainer" class="hidden mb-6"></div>
 
-                        <div
-                            class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 text-[10px] ui-text-mute flex gap-4">
+                        <div class="mt-auto pt-4 border-t text-[10px] ui-text-mute flex gap-4"
+                            style="border-color: var(--c-border)">
                             <div class="flex items-center"><span
                                     class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block mr-1.5"></span>客观性能</div>
-                            <div class="flex items-center"><span
-                                    class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block mr-1.5"></span>偏好加成</div>
+                            <div class="flex items-center"><span class="w-1.5 h-1.5 rounded-full inline-block mr-1.5"
+                                    style="background-color: var(--c-primary)"></span>偏好加成</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 维度分析 & 雷达图 -->
-                <div class="lg:col-span-8 ui-card p-6 flex flex-col md:flex-row gap-8">
+                <!-- 2. 雷达图 & 进度条 (Unfold & Fade) -->
+                <div id="card-detail" class="reveal-hidden lg:col-span-8 ui-card p-6 flex flex-col md:flex-row gap-8">
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                         <!-- 动态生成的进度条 -->
                         <div>
@@ -531,9 +509,9 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- AI 诊断结论 -->
-            <div class="mb-6 ui-card p-8 summary-window">
-                <div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+            <!-- 3. 诊断结论 (Slide Up) -->
+            <div id="card-summary" class="reveal-hidden mb-6 ui-card p-8 summary-window">
+                <div class="flex items-center gap-3 mb-4 pb-4 border-b" style="border-color: var(--c-border)">
                     <div
                         class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-user-doctor text-xl"></i>
@@ -548,15 +526,16 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- 详细检查项 -->
+            <!-- 4. 详细模块 (Staggered Slide) -->
             <div>
-                <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
+                <h3 id="modules-title"
+                    class="reveal-hidden text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i> 详细检查项目
                 </h3>
                 <div id="aiModulesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
 
-            <div class="text-center mt-12 mb-8">
+            <div class="text-center mt-12 mb-8 reveal-hidden" id="footer-text">
                 <p class="text-[10px] ui-text-mute uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB
                 </p>
             </div>
@@ -564,40 +543,162 @@ CPU: Intel Core Ultra 5 245KF
     </main>
 
     <script>
-        const ThemeManager = {
-            observers: [],
-            subscribe(fn) { this.observers.push(fn); },
-            notify(isDark) { this.observers.forEach(observer => observer(isDark)); },
-            toggle() {
-                try {
-                    const html = document.documentElement;
-                    const isDark = html.classList.toggle('dark');
-                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                    this.notify(isDark);
-                } catch (e) { console.error(e); }
+        /**
+         * [核心] 颜色配置表 (Configuration Table)
+         * 这是全站颜色的唯一真理来源。JS 会自动将其注入 CSS 变量，
+         * 并供 Chart.js 等组件读取。
+         */
+        const COLOR_CONFIG = {
+            light: {
+                pageBg: '#f0f4f8',          // 极淡蓝灰
+                cardBg: '#ffffff',          // 纯白
+                navBg: 'rgba(255, 255, 255, 0.9)',
+
+                textMain: '#334155',        // Slate-700
+                textHead: '#1e293b',        // Slate-800
+                textMute: '#64748b',        // Slate-500
+                primary: '#2563eb',         // Blue-600
+                primaryHover: '#1d4ed8',    // Blue-700
+                primaryLight: '#dbeafe',    // Blue-100 (边框高亮用)
+
+                border: '#e2e8f0',          // Slate-200
+                inputBg: '#f8fafc',         // Slate-50
+                focusRing: 'rgba(37, 99, 235, 0.15)',
+                glow: 'rgba(59, 130, 246, 0.08)', // 卡片光晕
+
+                // 阴影
+                shadowSm: '0 1px 2px 0 rgba(15, 23, 42, 0.05)',
+                shadowHover: '0 10px 25px -5px rgba(59, 130, 246, 0.15)',
+
+                // 状态色 (背景/文字/边框)
+                successBg: '#ecfdf5', successText: '#059669', successBorder: '#d1fae5',
+                warningBg: '#fffbeb', warningText: '#b45309', warningBorder: '#fef3c7',
+                dangerBg: '#fff1f2', dangerText: '#be123c', dangerBorder: '#ffe4e6',
+                infoBg: '#f8fafc', infoText: '#334155', infoBorder: '#e2e8f0',
+
+                // 偏好加成 (Indigo)
+                bonusBg: '#e0e7ff', bonusText: '#3730a3', bonusBorder: '#c7d2fe'
             },
-            init() {
-                const btn = document.getElementById('themeToggleBtn');
-                if (btn) btn.onclick = () => this.toggle();
+            dark: {
+                pageBg: '#0f172a',          // Slate-900 (Deep Blue)
+                cardBg: '#1e293b',          // Slate-800
+                navBg: 'rgba(15, 23, 42, 0.9)',
+
+                textMain: '#cbd5e1',        // Slate-300
+                textHead: '#f1f5f9',        // Slate-100
+                textMute: '#94a3b8',        // Slate-400
+                primary: '#60a5fa',         // Blue-400 (Lighter for dark mode)
+                primaryHover: '#3b82f6',    // Blue-500
+                primaryLight: '#334155',    // Slate-700
+
+                border: '#334155',          // Slate-700
+                inputBg: '#0f172a',         // Match page bg
+                focusRing: 'rgba(96, 165, 250, 0.2)',
+                glow: 'rgba(96, 165, 250, 0.08)',
+
+                // 阴影
+                shadowSm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+                shadowHover: '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
+
+                // 状态色 (背景更深，文字更亮)
+                successBg: '#064e3b', successText: '#6ee7b7', successBorder: '#065f46',
+                warningBg: '#451a03', warningText: '#fcd34d', warningBorder: '#78350f',
+                dangerBg: '#4c0519', dangerText: '#fda4af', dangerBorder: '#881337',
+                infoBg: '#1e293b', infoText: '#cbd5e1', infoBorder: '#334155',
+
+                // 偏好加成
+                bonusBg: '#312e81', bonusText: '#c7d2fe', bonusBorder: '#4338ca'
             }
         };
-        ThemeManager.init();
+
+        const ThemeManager = {
+            currentMode: 'light',
+
+            init() {
+                const stored = localStorage.getItem('theme');
+                const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const h = new Date().getHours();
+                this.setMode(stored ? stored : (sysDark ? 'dark' : (h >= 18 || h < 6 ? 'dark' : 'light')));
+
+                document.getElementById('themeToggleBtn').onclick = () => this.toggle();
+            },
+
+            toggle() {
+                this.setMode(this.currentMode === 'light' ? 'dark' : 'light');
+            },
+
+            setMode(mode) {
+                this.currentMode = mode;
+                localStorage.setItem('theme', mode);
+
+                // 1. 设置 HTML 类 (用于 Tailwind 工具类兜底)
+                if (mode === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+
+                // 2. 注入 CSS 变量 (Core)
+                const colors = COLOR_CONFIG[mode];
+                const root = document.documentElement;
+
+                // 映射 Config 到 CSS Variables
+                const mapping = {
+                    '--c-page-bg': colors.pageBg,
+                    '--c-card-bg': colors.cardBg,
+                    '--c-nav-bg': colors.navBg,
+                    '--c-text-main': colors.textMain,
+                    '--c-text-head': colors.textHead,
+                    '--c-text-mute': colors.textMute,
+                    '--c-primary': colors.primary,
+                    '--c-primary-hover': colors.primaryHover,
+                    '--c-primary-light': colors.primaryLight,
+                    '--c-border': colors.border,
+                    '--c-input-bg': colors.inputBg,
+                    '--c-focus-ring': colors.focusRing,
+                    '--c-glow': colors.glow,
+                    '--shadow-sm': colors.shadowSm,
+                    '--shadow-hover': colors.shadowHover,
+
+                    '--s-success-bg': colors.successBg, '--s-success-text': colors.successText, '--s-success-border': colors.successBorder,
+                    '--s-warning-bg': colors.warningBg, '--s-warning-text': colors.warningText, '--s-warning-border': colors.warningBorder,
+                    '--s-danger-bg': colors.dangerBg, '--s-danger-text': colors.dangerText, '--s-danger-border': colors.dangerBorder,
+                    '--s-info-bg': colors.infoBg, '--s-info-text': colors.infoText, '--s-info-border': colors.infoBorder,
+                    '--s-bonus-bg': colors.bonusBg, '--s-bonus-text': colors.bonusText, '--s-bonus-border': colors.bonusBorder
+                };
+
+                for (const [key, value] of Object.entries(mapping)) {
+                    root.style.setProperty(key, value);
+                }
+
+                // 3. 通知图表更新
+                if (window.ChartManager) ChartManager.handleThemeChange(mode);
+            },
+
+            getColors() { return COLOR_CONFIG[this.currentMode]; }
+        };
 
         const ChartManager = {
             chartInstance: null,
-            init() { ThemeManager.subscribe((isDark) => this.handleThemeChange(isDark)); },
+
+            init() {
+                // 等待 ThemeManager 就绪
+            },
+
             getFontSize() { return window.innerWidth < 640 ? 8 : 10; },
+
             createOrUpdate(data) {
                 const ctx = document.getElementById('radarChart').getContext('2d');
-                const isDark = document.documentElement.classList.contains('dark');
+                const colors = ThemeManager.getColors(); // 直接从配置表读颜色
                 const fontSize = this.getFontSize();
+
                 this.currentData = data;
                 if (this.chartInstance) this.chartInstance.destroy();
 
-                // 统一图表颜色到 CSS 变量系统 (Blue-600/400)
-                const chartColor = isDark ? '#60a5fa' : '#2563eb';
-                const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
-                const textColor = isDark ? '#94a3b8' : '#64748b';
+                // 将 Hex 转为 RGB 供透明度使用
+                const hexToRgba = (hex, alpha) => {
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                };
 
                 this.chartInstance = new Chart(ctx, {
                     type: 'radar',
@@ -606,45 +707,77 @@ CPU: Intel Core Ultra 5 245KF
                         datasets: [{
                             label: '评分',
                             data: [data.sub_scores.performance, data.sub_scores.value, data.sub_scores.compatibility, data.sub_scores.quality],
-                            backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.1)',
-                            borderColor: chartColor,
+                            backgroundColor: hexToRgba(colors.primary, 0.2),
+                            borderColor: colors.primary,
                             borderWidth: 2,
-                            pointRadius: 0, // 极简模式，隐藏点
+                            pointRadius: 0,
                             pointHoverRadius: 4,
-                            pointBackgroundColor: chartColor
+                            pointBackgroundColor: colors.primary
                         }]
                     },
                     options: {
                         scales: {
                             r: {
                                 suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
-                                grid: { color: gridColor },
-                                angleLines: { color: gridColor },
-                                pointLabels: { color: textColor, font: { size: fontSize, family: "'Noto Sans SC', sans-serif" } }
+                                grid: { color: hexToRgba(colors.textMute, 0.1) },
+                                angleLines: { color: hexToRgba(colors.textMute, 0.1) },
+                                pointLabels: {
+                                    color: colors.textMute,
+                                    font: { size: fontSize, family: "'Noto Sans SC', sans-serif" }
+                                }
                             }
                         },
-                        plugins: { legend: { display: false }, tooltip: { enabled: false } }, // 移除Tooltip保持极简
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
                         animation: { duration: 1000, easing: 'easeOutQuart' }
                     }
                 });
             },
-            handleThemeChange(isDark) {
-                if (!this.chartInstance) return;
-                this.createOrUpdate(this.currentData); // 简单重绘
+
+            handleThemeChange(mode) {
+                if (this.chartInstance && this.currentData) {
+                    this.createOrUpdate(this.currentData);
+                }
             }
         };
-        ChartManager.init();
 
+        // ================= 业务逻辑 =================
         window.addEventListener('load', function () {
+            ThemeManager.init(); // 启动主题引擎
+            ChartManager.init();
+
             if (typeof HARDWARE_DB === 'undefined') {
                 console.error("Critical: hardware_data.js failed to load!");
-                document.getElementById('dbStatus').innerHTML = '<span class="text-red-500 font-bold">数据加载失败</span>';
+                document.getElementById('dbStatus').innerHTML = '<span class="state-danger px-2 py-0.5 rounded text-xs">Data Error</span>';
             } else {
                 document.getElementById('dbStatus').innerHTML = '<span class="ui-text-highlight font-medium"><i class="fa-solid fa-check-circle"></i> 2025 DB Ready</span>';
             }
         });
 
+        // 简单的输入即识别 (Real-time Perception)
         const ALIAS_MAP_KEYS = typeof ALIAS_MAP !== 'undefined' ? ALIAS_MAP : {};
+        document.getElementById('configInput').addEventListener('input', function (e) {
+            const text = e.target.value;
+            const detectedBar = document.getElementById('detectedHardwareBar');
+            const detectedTags = document.getElementById('detectedTags');
+
+            if (text.length < 5) {
+                detectedBar.classList.add('hidden');
+                return;
+            }
+
+            // 简单的防抖模拟 (实际不需要太复杂，本地查找很快)
+            const contextItems = extractHardwareContext(text);
+            if (contextItems.length > 0) {
+                detectedTags.innerHTML = contextItems.map(item => {
+                    const name = item.split('|')[0].replace('[已识别]', '').trim();
+                    return `<span class="px-2 py-1 ui-tag text-[10px] animate-slide-up">${name}</span>`;
+                }).join('');
+                detectedBar.classList.remove('hidden');
+            } else {
+                detectedBar.classList.add('hidden');
+            }
+        });
+
         function extractHardwareContext(text) {
             if (typeof HARDWARE_DB === 'undefined') return [];
             let lowerText = text.toLowerCase().replace(/\s+/g, ' ');
@@ -665,28 +798,19 @@ CPU: Intel Core Ultra 5 245KF
         async function startAnalysis() {
             const input = document.getElementById('configInput').value.trim();
             if (input.length < 2) return alert("请粘贴配置单内容");
+
             const btn = document.getElementById('scanBtn');
             const resultArea = document.getElementById('resultArea');
-            const errorArea = document.getElementById('errorArea');
-            const detectedBar = document.getElementById('detectedHardwareBar');
-            const detectedTags = document.getElementById('detectedTags');
+
+            // 重置状态
+            resultArea.classList.add('hidden');
+            // 隐藏所有子元素以备动画
+            document.querySelectorAll('#resultArea > div').forEach(el => el.classList.add('reveal-hidden'));
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch loading-spin"></i> 分析中...';
 
-            resultArea.classList.add('hidden');
-            resultArea.classList.remove('opacity-100', 'translate-y-0');
-            errorArea.classList.add('hidden');
-            detectedBar.classList.add('hidden');
-
             const contextItems = extractHardwareContext(input);
-            if (contextItems.length > 0) {
-                detectedTags.innerHTML = contextItems.map(item => {
-                    const name = item.split('|')[0].replace('[已识别]', '').trim();
-                    return `<span class="px-2 py-1 ui-tag truncate max-w-[150px]">${name}</span>`;
-                }).join('');
-                detectedBar.classList.remove('hidden');
-            }
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -699,11 +823,14 @@ CPU: Intel Core Ultra 5 245KF
                 const data = await response.json();
                 let contentStr = data.choices?.[0]?.message?.content || data.message?.content || JSON.stringify(data);
                 const jsonStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                // 开始渲染 UI (包含动画序列)
                 renderUI(JSON.parse(jsonStr));
+
             } catch (error) {
                 console.error("Analysis Error:", error);
                 document.getElementById('errorText').innerText = "服务暂时不可用，请稍后重试。";
-                errorArea.classList.remove('hidden');
+                document.getElementById('errorArea').classList.remove('hidden');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
@@ -711,24 +838,42 @@ CPU: Intel Core Ultra 5 245KF
         }
 
         function renderUI(data) {
-            const area = document.getElementById('resultArea');
-            area.classList.remove('hidden');
-            void area.offsetWidth;
-            area.classList.add('opacity-100', 'translate-y-0');
+            const resultArea = document.getElementById('resultArea');
 
+            // 1. 显示大容器
+            resultArea.classList.remove('hidden');
+
+            // ================= 数据填充 =================
             const finalScore = data.total_score !== undefined ? data.total_score : data.score;
-            document.getElementById('scoreDisplay').innerText = finalScore;
 
-            // 评分状态色逻辑 - 强制使用 CSS 变量类
+            // 数字滚动动画
+            if (window.CountUp) {
+                const countUp = new CountUp('scoreDisplay', finalScore, { duration: 2.5 });
+                if (!countUp.error) countUp.start();
+                else document.getElementById('scoreDisplay').innerText = finalScore;
+            } else {
+                document.getElementById('scoreDisplay').innerText = finalScore;
+            }
+
+            // 状态色
             const verdictEl = document.getElementById('verdictBadge');
-            verdictEl.className = `px-3 py-1 rounded-md text-xs font-bold ${finalScore >= 120 ? 'state-success' : (finalScore >= 90 ? 'state-info' : 'state-warning')}`;
+            let verdictClass = 'state-info';
+            if (finalScore >= 120) verdictClass = 'state-success';
+            else if (finalScore < 90) verdictClass = 'state-warning';
+            verdictEl.className = `px-3 py-1 rounded-md text-xs font-bold transition-colors ${verdictClass}`;
             verdictEl.innerText = data.verdict;
 
             // 偏好标签
             const prefContainer = document.getElementById('prefContainer');
             if (data.is_preference_match && data.preference_bonus > 0) {
                 prefContainer.classList.remove('hidden');
-                prefContainer.innerHTML = `<span class="ui-tag-bonus text-xs px-2 py-1 rounded shadow-sm flex items-center gap-1 w-fit"><i class="fa-solid fa-star"></i> 偏好加成 +${data.preference_bonus}</span>`;
+                // 使用 CSS 变量控制颜色
+                prefContainer.innerHTML = `
+                    <span class="text-[10px] px-2 py-1 rounded shadow-sm flex items-center gap-1 w-fit" 
+                          style="background-color: var(--s-bonus-bg); color: var(--s-bonus-text); border: 1px solid var(--s-bonus-border)">
+                        <i class="fa-solid fa-star"></i> 偏好加成 +${data.preference_bonus}
+                    </span>
+                `;
             } else {
                 prefContainer.classList.add('hidden');
             }
@@ -738,39 +883,38 @@ CPU: Intel Core Ultra 5 245KF
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
-                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 100);
+                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600); // 稍作延迟配合入场
             };
             setBar('bar-perf', data.sub_scores.performance);
             setBar('bar-val', data.sub_scores.value);
             setBar('bar-comp', data.sub_scores.compatibility);
             setBar('bar-qual', data.sub_scores.quality);
 
+            // 文本内容
             document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
 
+            // 模块生成
             const modContainer = document.getElementById('aiModulesContainer');
             modContainer.innerHTML = '';
             if (data.modules) {
-                // 排序：红 > 黄 > 绿
                 const typePriority = { danger: 0, warning: 1, success: 2, info: 3 };
                 data.modules.sort((a, b) => (typePriority[a.type] || 99) - (typePriority[b.type] || 99));
 
-                data.modules.forEach(m => {
-                    // 映射到 Design System 的 .state-* 类
+                data.modules.forEach((m, index) => {
                     const stateClass = {
-                        success: 'state-success',
-                        warning: 'state-warning',
-                        danger: 'state-danger'
+                        success: 'state-success', warning: 'state-warning', danger: 'state-danger'
                     }[m.type] || 'state-info';
 
                     const icon = {
-                        success: 'fa-check-circle',
-                        warning: 'fa-triangle-exclamation',
-                        danger: 'fa-circle-xmark'
+                        success: 'fa-check-circle', warning: 'fa-triangle-exclamation', danger: 'fa-circle-xmark'
                     }[m.type] || 'fa-circle-info';
 
                     const div = document.createElement('div');
-                    // 强制使用 ui-card 基础样式 + 状态色覆盖
-                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1`;
+                    // 添加 stagger-item 类用于交错动画
+                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item animate-slide-up reveal-hidden`;
+                    // 动态计算延迟
+                    div.style.animationDelay = `${600 + (index * 100)}ms`;
+
                     div.innerHTML = `
                         <div class="mt-0.5 shrink-0"><i class="fa-solid ${icon}"></i></div>
                         <div class="min-w-0">
@@ -780,7 +924,44 @@ CPU: Intel Core Ultra 5 245KF
                     modContainer.appendChild(div);
                 });
             }
+
+            // 更新图表
             ChartManager.createOrUpdate(data);
+
+            // ================= [核心] 电影级入场序列 (Cinematic Reveal) =================
+            // 使用 requestAnimationFrame 确保 DOM 更新后触发重绘
+            requestAnimationFrame(() => {
+                // 1. 总分卡片弹起 (Pop Up)
+                const cardScore = document.getElementById('card-score');
+                cardScore.classList.remove('reveal-hidden');
+                cardScore.classList.add('animate-pop-up');
+
+                // 2. 雷达图展开 (Unfold) - 延迟 200ms
+                setTimeout(() => {
+                    const cardDetail = document.getElementById('card-detail');
+                    cardDetail.classList.remove('reveal-hidden');
+                    cardDetail.classList.add('animate-unfold');
+                }, 200);
+
+                // 3. 诊断书淡入 (Slide Up) - 延迟 400ms
+                setTimeout(() => {
+                    const cardSummary = document.getElementById('card-summary');
+                    cardSummary.classList.remove('reveal-hidden');
+                    cardSummary.classList.add('animate-slide-up');
+                }, 400);
+
+                // 4. 标题和Footer - 延迟 600ms
+                setTimeout(() => {
+                    document.getElementById('modules-title').classList.remove('reveal-hidden');
+                    document.getElementById('modules-title').classList.add('animate-slide-up');
+
+                    document.getElementById('footer-text').classList.remove('reveal-hidden');
+                    document.getElementById('footer-text').classList.add('animate-slide-up');
+
+                    // 模块本身的动画由 CSS animation-delay 控制，只需要移除 hidden 类
+                    document.querySelectorAll('.stagger-item').forEach(el => el.classList.remove('reveal-hidden'));
+                }, 600);
+            });
         }
     </script>
 </body>
