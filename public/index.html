@@ -20,7 +20,6 @@
     <style>
         /* ================= 基础布局与过渡 ================= */
         :root {
-            /* 统一节奏：0.4秒，四次贝塞尔曲线 */
             --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
             --duration-theme: 0.4s;
         }
@@ -29,9 +28,28 @@
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--c-page-bg);
             color: var(--c-text-main);
-            /* 页面背景过渡 */
             transition: background-color var(--duration-theme) var(--ease-out-quart),
                 color var(--duration-theme) var(--ease-out-quart);
+            position: relative;
+            /* For noise overlay */
+        }
+
+        /* [前沿设计] 噪点纹理叠加 (Noise Overlay) 
+           给纯色背景增加“胶片感”和“物理质感”，消除廉价的塑料感。
+        */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.4;
+            /* 淡淡的纹理 */
+            mix-blend-mode: overlay;
         }
 
         /* ================= 动态组件系统 (UI Kit) ================= */
@@ -42,7 +60,6 @@
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-            /* 复合过渡：颜色变化与物理变化分离 */
             transition: transform 0.3s var(--ease-out-quart),
                 box-shadow 0.3s var(--ease-out-quart),
                 background-color var(--duration-theme) var(--ease-out-quart),
@@ -65,11 +82,9 @@
         }
 
         /* 3. 输入框 (透明化处理) */
-        /* 这里的输入框不再有自己的背景色，直接透出卡片背景 */
         .ui-input-transparent {
             width: 100%;
             background-color: transparent;
-            /* 关键：透明背景 */
             border: 0;
             color: var(--c-text-head);
             padding: 1.5rem;
@@ -87,30 +102,24 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 输入区容器：负责边框和聚焦光晕 */
         .ui-input-wrapper {
             position: relative;
             background-color: var(--c-card-bg);
-            /* 与卡片一致 */
             border: 1px solid var(--c-border);
             border-radius: 1rem;
             overflow: hidden;
             transition: background-color var(--duration-theme) var(--ease-out-quart),
                 border-color 0.2s ease,
-                /* 聚焦边框快速响应 */
                 box-shadow 0.2s ease;
         }
 
-        /* 当内部 textarea 聚焦时，改变 wrapper 样式 (通过 JS 或 :focus-within) */
         .ui-input-wrapper:focus-within {
             border-color: var(--c-primary);
             box-shadow: 0 0 0 4px var(--c-focus-ring);
         }
 
-        /* 底部工具栏 */
         .ui-input-footer {
             background-color: var(--c-input-bg);
-            /* 微调底部颜色以区分区域 */
             border-top: 1px solid var(--c-border);
             padding: 1rem;
             display: flex;
@@ -171,6 +180,7 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* Markdown 增强 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 600;
@@ -188,6 +198,23 @@
             color: var(--c-text-mute);
         }
 
+        /* [前沿] 打字机光标效果 */
+        .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: var(--c-primary);
+            margin-left: 2px;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
         .progress-track {
             background-color: var(--c-border);
             border-radius: 99px;
@@ -202,7 +229,6 @@
             background-color: var(--c-primary);
         }
 
-        /* 状态色映射 */
         .state-success {
             background: var(--s-success-bg);
             border-color: var(--s-success-border);
@@ -232,7 +258,6 @@
             transition: background-image var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 滚动条 */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -381,11 +406,7 @@
             </p>
         </div>
 
-        <!-- 
-            [核心修改] 回归动态主题输入区
-            使用 ui-input-wrapper 包裹 ui-input-transparent
-            实现背景色统一由 wrapper 控制，解决同步问题
-        -->
+        <!-- 输入区 -->
         <div class="ui-input-wrapper shadow-lg animate-slide-up" style="animation-delay: 100ms;">
             <textarea id="configInput" class="ui-input-transparent" placeholder="在此粘贴配置单...
 例：
@@ -512,7 +533,7 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- 3. 诊断结论 -->
+            <!-- 3. 诊断结论 (Typewriter Effect) -->
             <div id="card-summary" class="mb-6 ui-card p-8 summary-window">
                 <div class="flex items-center gap-3 mb-4 pb-4 border-b" style="border-color: var(--c-border)">
                     <div
@@ -524,6 +545,7 @@ CPU: Intel Core Ultra 5 245KF
                         <p class="text-xs ui-text-mute uppercase tracking-widest font-bold">Comprehensive Analysis</p>
                     </div>
                 </div>
+                <!-- 容器用于流式打字 -->
                 <div id="aiSummary"
                     class="prose prose-slate dark:prose-invert prose-lg max-w-none ui-heading leading-relaxed markdown-content">
                 </div>
@@ -814,6 +836,29 @@ CPU: Intel Core Ultra 5 245KF
             }
         }
 
+        // [前沿] 模拟流式打字机效果 (Simulated Streaming)
+        // 逐字解析 Markdown，增强 AI 的"思考感"
+        function typeWriterEffect(text, elementId, speed = 15) {
+            const el = document.getElementById(elementId);
+            let i = 0;
+            el.innerHTML = ''; // 清空
+
+            function type() {
+                if (i < text.length) {
+                    // 每次多打几个字，避免太慢
+                    const chunk = text.slice(0, i + 3);
+                    i += 3;
+                    // 实时解析 markdown
+                    el.innerHTML = marked.parse(chunk) + '<span class="cursor-blink"></span>';
+                    requestAnimationFrame(type);
+                } else {
+                    // 结束，移除光标
+                    el.innerHTML = marked.parse(text);
+                }
+            }
+            type();
+        }
+
         function renderUI(data) {
             // 安全重置：确保所有组件可见
             const elements = {
@@ -871,7 +916,12 @@ CPU: Intel Core Ultra 5 245KF
             setBar('bar-comp', data.sub_scores.compatibility);
             setBar('bar-qual', data.sub_scores.quality);
 
-            document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
+            // [前沿] 使用打字机效果替代直接赋值
+            // document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
+            // 延迟一点点，等卡片滑上来再开始打字
+            setTimeout(() => {
+                typeWriterEffect(data.summary, 'aiSummary');
+            }, 600);
 
             const modContainer = document.getElementById('aiModulesContainer');
             modContainer.innerHTML = '';
