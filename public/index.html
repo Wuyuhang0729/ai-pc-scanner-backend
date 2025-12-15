@@ -55,12 +55,8 @@
 
         /* ================= 动态组件系统 (UI Kit) ================= */
 
-        /* [创意升级] 聚光灯卡片容器 */
-        .spotlight-group {
-            /* 用于 JS 捕获鼠标位置 */
-            position: relative;
-        }
-
+        /* [核心修复] 聚光灯卡片 */
+        /* 注意：--mouse-x 和 --mouse-y 将由 JS 实时注入 */
         .ui-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
@@ -69,14 +65,13 @@
             backdrop-filter: blur(8px);
             position: relative;
             overflow: hidden;
-            /* 限制光斑溢出 */
             transition: transform 0.4s var(--ease-out-quart),
                 box-shadow 0.4s var(--ease-out-quart),
                 background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* [创意升级] 聚光灯光斑层 - 默认隐藏，JS控制位置 */
+        /* 光斑层：跟随鼠标移动的柔和辉光 */
         .ui-card::before {
             content: "";
             position: absolute;
@@ -84,28 +79,17 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
-                    rgba(255, 255, 255, 0.06),
+            background: radial-gradient(800px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+                    rgba(255, 255, 255, 0.04),
                     transparent 40%);
             z-index: 1;
             opacity: 0;
+            /* 默认隐藏，JS 激活时显示 */
             transition: opacity 0.5s;
             pointer-events: none;
         }
 
-        /* 深色模式下的光斑更明显一点 */
-        html.dark .ui-card::before {
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
-                    rgba(255, 255, 255, 0.08),
-                    transparent 40%);
-        }
-
-        /* 鼠标进入卡片组时显示光斑 */
-        .spotlight-group:hover .ui-card::before {
-            opacity: 1;
-        }
-
-        /* 边框高亮效果 - 通过伪元素叠加 */
+        /* 边框高亮层：跟随鼠标移动的锐利边框 */
         .ui-card::after {
             content: "";
             position: absolute;
@@ -115,8 +99,7 @@
             bottom: 0;
             border-radius: 1rem;
             padding: 1px;
-            /* 边框宽度 */
-            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y),
+            background: radial-gradient(600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
                     var(--c-primary-light),
                     transparent 40%);
             -webkit-mask:
@@ -130,21 +113,22 @@
             pointer-events: none;
         }
 
-        .spotlight-group:hover .ui-card::after {
+        /* 鼠标悬停在卡片容器上时，激活光效 */
+        .spotlight-active .ui-card::before,
+        .spotlight-active .ui-card::after {
             opacity: 1;
-        }
-
-        /* 确保内容在光斑之上 */
-        .ui-card>* {
-            position: relative;
-            z-index: 10;
         }
 
         .ui-card:hover {
             transform: translateY(-2px) scale(1.002);
             box-shadow: var(--shadow-hover);
-            /* 边框颜色由 spotlight 接管，这里可以淡化 */
-            border-color: transparent;
+        }
+
+        /* 深色模式下的光斑调整 */
+        html.dark .ui-card::before {
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(255, 255, 255, 0.08),
+                    transparent 40%);
         }
 
         .ui-nav {
@@ -192,26 +176,6 @@
             box-shadow: 0 0 0 4px var(--c-focus-ring);
         }
 
-        /* [创意升级] 输入分析时的脉冲效果 */
-        @keyframes border-pulse {
-            0% {
-                border-color: var(--c-border);
-            }
-
-            50% {
-                border-color: var(--c-primary);
-                box-shadow: 0 0 15px var(--c-glow);
-            }
-
-            100% {
-                border-color: var(--c-border);
-            }
-        }
-
-        .ui-input-wrapper.analyzing {
-            animation: border-pulse 2s infinite ease-in-out;
-        }
-
         .ui-input-footer {
             background-color: var(--c-input-bg);
             border-top: 1px solid var(--c-border);
@@ -247,7 +211,6 @@
             box-shadow: none;
         }
 
-        /* [创意升级] 标签样式 + 解密动画占位 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
@@ -256,23 +219,6 @@
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
-        }
-
-        /* 标签出现时的微动画 */
-        .ui-tag-enter {
-            animation: tagPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes tagPop {
-            from {
-                opacity: 0;
-                transform: scale(0.8) translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
         }
 
         /* ================= 辅助类 ================= */
@@ -291,10 +237,54 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* [优化] Markdown 增强排版 */
+
+        /* 1. Strong: 荧光笔高亮效果 (Highlighter) */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 700;
-            transition: color var(--duration-theme) var(--ease-out-quart);
+            background: linear-gradient(to bottom, transparent 60%, var(--c-primary-light) 60%);
+            padding: 0 2px;
+            border-radius: 2px;
+            transition: all var(--duration-theme) var(--ease-out-quart);
+        }
+
+        /* 2. Blockquote: 专家批注样式 */
+        .markdown-content blockquote {
+            border-left: 4px solid var(--c-primary);
+            margin: 1.5em 0;
+            padding: 0.8em 1.2em;
+            background-color: var(--c-input-bg);
+            color: var(--c-text-head);
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+            position: relative;
+        }
+
+        /* 装饰性引号 */
+        .markdown-content blockquote::before {
+            content: '"';
+            font-size: 3em;
+            color: var(--c-border);
+            position: absolute;
+            top: -0.2em;
+            left: 0.1em;
+            opacity: 0.5;
+            font-family: serif;
+        }
+
+        /* 3. Heading: 增加间距和分隔线 */
+        .markdown-content h3,
+        .markdown-content h2 {
+            font-size: 1.25em;
+            font-weight: 800;
+            margin-top: 2em;
+            margin-bottom: 0.8em;
+            color: var(--c-text-head);
+            border-bottom: 1px dashed var(--c-border);
+            padding-bottom: 0.4em;
+            display: block;
+            transition: all var(--duration-theme) var(--ease-out-quart);
         }
 
         .markdown-content p {
@@ -311,18 +301,6 @@
 
         .markdown-content li {
             margin-bottom: 0.5em;
-        }
-
-        .markdown-content h3 {
-            font-size: 1.2em;
-            font-weight: 800;
-            margin-top: 1.5em;
-            margin-bottom: 0.75em;
-            color: var(--c-text-head);
-            border-bottom: 2px solid var(--c-border);
-            padding-bottom: 0.25em;
-            display: inline-block;
-            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .cursor-blink {
@@ -622,7 +600,7 @@ CPU: Intel Core Ultra 5 245KF
         </div>
 
         <!-- 结果展示区 -->
-        <!-- [创意升级] 添加 spotlight-group 类，启用鼠标聚光灯效果 -->
+        <!-- [创意升级] spotlight-group: 启用鼠标聚光灯效果 -->
         <div id="resultArea" class="hidden mt-10 spotlight-group">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
@@ -929,6 +907,23 @@ CPU: Intel Core Ultra 5 245KF
         };
 
         window.addEventListener('load', function () {
+            // [核心修复] 初始化鼠标追踪逻辑，激活聚光灯
+            document.addEventListener('mousemove', e => {
+                const cards = document.querySelectorAll('.ui-card');
+                cards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+                // 为结果区域添加激活类
+                const resultArea = document.getElementById('resultArea');
+                if (resultArea && !resultArea.classList.contains('spotlight-active')) {
+                    resultArea.classList.add('spotlight-active');
+                }
+            });
+
             ThemeManager.init();
             ChartManager.init();
 
@@ -952,10 +947,30 @@ CPU: Intel Core Ultra 5 245KF
 
             const contextItems = extractHardwareContext(text);
             if (contextItems.length > 0) {
-                detectedTags.innerHTML = contextItems.map(item => {
+                // [创意升级] 解密文字效果
+                detectedTags.innerHTML = ''; // Clear first
+                contextItems.forEach(item => {
                     const name = item.split('|')[0].replace('[已识别]', '').trim();
-                    return `<span class="px-2 py-1 ui-tag text-[10px] animate-slide-up">${name}</span>`;
-                }).join('');
+                    const span = document.createElement('span');
+                    span.className = 'px-2 py-1 ui-tag text-[10px] ui-tag-enter';
+                    span.innerText = name; // 先显示文字，后续可扩展 scramble
+                    detectedTags.appendChild(span);
+
+                    // Simple scramble effect simulation
+                    const originalText = name;
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+                    let iterations = 0;
+                    const interval = setInterval(() => {
+                        span.innerText = originalText.split('')
+                            .map((char, index) => {
+                                if (index < iterations) return originalText[index];
+                                return chars[Math.floor(Math.random() * chars.length)];
+                            })
+                            .join('');
+                        if (iterations >= originalText.length) clearInterval(interval);
+                        iterations += 1 / 2;
+                    }, 30);
+                });
                 detectedBar.classList.remove('hidden');
             } else {
                 detectedBar.classList.add('hidden');
@@ -987,8 +1002,11 @@ CPU: Intel Core Ultra 5 245KF
             const resultArea = document.getElementById('resultArea');
             const errorArea = document.getElementById('errorArea');
             const detectedBar = document.getElementById('detectedHardwareBar');
+            const inputCard = document.getElementById('inputCard');
 
             btn.disabled = true;
+            inputCard.classList.add('analyzing'); // 激活脉冲
+
             let loadingStep = 0;
             const loadingTexts = ["连接 DeepSeek 分析引擎...", "读取硬件参数...", "交叉比对 2025 数据库...", "生成兼容性报告...", "计算最终得分..."];
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[0]}`;
@@ -1041,6 +1059,7 @@ CPU: Intel Core Ultra 5 245KF
                 clearInterval(loadingInterval);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
+                inputCard.classList.remove('analyzing'); // 停止脉冲
             }
         }
 
@@ -1117,7 +1136,7 @@ CPU: Intel Core Ultra 5 245KF
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
-                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600);
+                setTimeout(() => { el.style.width = `${Math.min((score / 100) * 100, 100)}%`; }, 600);
             };
             setBar('bar-perf', data.sub_scores.performance);
             setBar('bar-val', data.sub_scores.value);
