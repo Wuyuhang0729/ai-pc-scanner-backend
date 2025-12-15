@@ -2,34 +2,43 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
+const compression = require('compression'); // 新增：引入压缩库
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 启用 CORS 和 JSON 解析
+// 1. 启用 Gzip 压缩 (大幅减小文件体积)
+app.use(compression());
+
+// 2. 允许跨域和 JSON 解析
 app.use(cors());
 app.use(express.json());
 
-// 托管静态文件 (你的 scanner.html)
-// 将 'public' 目录下的文件暴露出去
-app.use(express.static(path.join(__dirname, 'public')));
+// 3. 托管静态网页并开启缓存
+// maxAge: '1d' 告诉浏览器：这个文件夹里的文件，1天内别再重新下载了，直接用缓存
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: '1d', 
+    etag: true
+}));
 
-// 核心 API 代理路由
+// API 转发接口 (保持不变)
 app.post('/api/analyze', async (req, res) => {
     try {
-        const { messages } = req.body;
-
-        if (!process.env.DEEPSEEK_API_KEY) {
-            return res.status(500).json({ error: "Server API Key not configured" });
+        const apiKey = process.env.DEEPSEEK_API_KEY; 
+        
+        if (!apiKey) {
+            console.error("Error: Missing DEEPSEEK_API_KEY.");
+            return res.status(500).json({ error: "服务器 API Key 配置缺失" });
         }
 
-        // 向 DeepSeek 发起请求 (Key 在这里使用，用户看不到)
+        const { messages } = req.body;
+
         const response = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: "deepseek-chat",
@@ -42,10 +51,9 @@ app.post('/api/analyze', async (req, res) => {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error?.message || 'DeepSeek API Error');
+            throw new Error(data.error?.message || `DeepSeek API Error: ${response.status}`);
         }
 
-        // 把 DeepSeek 的回复转发给前端
         res.json(data);
 
     } catch (error) {
@@ -54,7 +62,10 @@ app.post('/api/analyze', async (req, res) => {
     }
 });
 
-// 启动服务器
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
