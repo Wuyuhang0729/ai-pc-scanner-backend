@@ -55,9 +55,8 @@
 
         /* ================= 动态组件系统 (UI Kit) ================= */
 
-        /* [核心修复] 聚光灯卡片 */
-        /* 注意：--mouse-x 和 --mouse-y 将由 JS 实时注入 */
-        .ui-card {
+        /* [核心升级] 聚光灯卡片 3.0 */
+        .interactive-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
@@ -71,26 +70,31 @@
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 光斑层：跟随鼠标移动的柔和辉光 */
-        .ui-card::before {
+        /* 光斑层 (Glow Layer)
+           使用 CSS 变量接收 JS 计算出的物理参数
+           --spot-size: 呼吸变大的尺寸
+           --spot-opacity: 呼吸变化的透明度
+           --mouse-x/y: 带有惯性延迟的坐标
+        */
+        .interactive-card::before {
             content: "";
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(800px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
-                    rgba(255, 255, 255, 0.04),
+            background: radial-gradient(var(--spot-size, 800px) circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+                    rgba(255, 255, 255, var(--spot-opacity, 0.05)),
                     transparent 40%);
             z-index: 1;
             opacity: 0;
-            /* 默认隐藏，JS 激活时显示 */
+            /* JS 激活 spotlight-active 后显示 */
             transition: opacity 0.5s;
             pointer-events: none;
         }
 
-        /* 边框高亮层：跟随鼠标移动的锐利边框 */
-        .ui-card::after {
+        /* 边框高亮层 (Border Highlight) - 尺寸略小，更聚光 */
+        .interactive-card::after {
             content: "";
             position: absolute;
             top: 0;
@@ -113,21 +117,22 @@
             pointer-events: none;
         }
 
-        /* 鼠标悬停在卡片容器上时，激活光效 */
-        .spotlight-active .ui-card::before,
-        .spotlight-active .ui-card::after {
+        /* 激活光效 */
+        .spotlight-active .interactive-card::before,
+        .spotlight-active .interactive-card::after {
             opacity: 1;
         }
 
-        .ui-card:hover {
+        .interactive-card:hover {
             transform: translateY(-2px) scale(1.002);
             box-shadow: var(--shadow-hover);
         }
 
-        /* 深色模式下的光斑调整 */
-        html.dark .ui-card::before {
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
-                    rgba(255, 255, 255, 0.08),
+        /* 深色模式下的光斑调整 - 基础亮度由 JS 控制，这里只微调颜色 */
+        html.dark .interactive-card::before {
+            /* 这里的颜色基底稍微亮一点 */
+            background: radial-gradient(var(--spot-size, 800px) circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+                    rgba(255, 255, 255, var(--spot-opacity, 0.08)),
                     transparent 40%);
         }
 
@@ -152,23 +157,14 @@
             outline: none;
             height: 15rem;
             transition: color var(--duration-theme) var(--ease-out-quart);
+            position: relative;
+            z-index: 10;
         }
 
         .ui-input-transparent::placeholder {
             color: var(--c-text-mute);
             opacity: 0.6;
             transition: color var(--duration-theme) var(--ease-out-quart);
-        }
-
-        .ui-input-wrapper {
-            position: relative;
-            background-color: var(--c-card-bg);
-            border: 1px solid var(--c-border);
-            border-radius: 1rem;
-            overflow: hidden;
-            transition: background-color var(--duration-theme) var(--ease-out-quart),
-                border-color 0.2s ease,
-                box-shadow 0.2s ease;
         }
 
         .ui-input-wrapper:focus-within {
@@ -185,6 +181,8 @@
             align-items: center;
             transition: background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
+            position: relative;
+            z-index: 10;
         }
 
         .ui-btn-primary {
@@ -211,6 +209,7 @@
             box-shadow: none;
         }
 
+        /* 标签动画 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
@@ -219,6 +218,21 @@
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .ui-tag-enter {
+            animation: tagPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
+        }
+
+        @keyframes tagPop {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         /* ================= 辅助类 ================= */
@@ -237,11 +251,9 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* [优化] Markdown 增强排版 */
-
-        /* 1. Strong: 荧光笔高亮效果 (Highlighter) */
+        /* Markdown 增强排版 */
         .markdown-content strong {
-            color: var(--c-primary);
+            color: var(--c-text-head);
             font-weight: 700;
             background: linear-gradient(to bottom, transparent 60%, var(--c-primary-light) 60%);
             padding: 0 2px;
@@ -249,7 +261,6 @@
             transition: all var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 2. Blockquote: 专家批注样式 */
         .markdown-content blockquote {
             border-left: 4px solid var(--c-primary);
             margin: 1.5em 0;
@@ -259,21 +270,13 @@
             font-style: italic;
             border-radius: 0 8px 8px 0;
             position: relative;
+            transition: background-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 装饰性引号 */
-        .markdown-content blockquote::before {
-            content: '"';
-            font-size: 3em;
-            color: var(--c-border);
-            position: absolute;
-            top: -0.2em;
-            left: 0.1em;
-            opacity: 0.5;
-            font-family: serif;
+        .markdown-content blockquote p {
+            margin-bottom: 0;
         }
 
-        /* 3. Heading: 增加间距和分隔线 */
         .markdown-content h3,
         .markdown-content h2 {
             font-size: 1.25em;
@@ -545,7 +548,7 @@
         </div>
     </nav>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative z-10">
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative z-10" id="main-container">
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
                 把配置单发给我<br>
@@ -559,7 +562,8 @@
         </div>
 
         <!-- 输入区 -->
-        <div id="inputCard" class="ui-input-wrapper shadow-lg animate-slide-up" style="animation-delay: 100ms;">
+        <div id="inputCard" class="interactive-card ui-input-wrapper shadow-lg animate-slide-up"
+            style="animation-delay: 100ms;">
             <textarea id="configInput" class="ui-input-transparent" placeholder="在此粘贴配置单...
 例：
 CPU: Intel Core Ultra 5 245KF
@@ -600,13 +604,12 @@ CPU: Intel Core Ultra 5 245KF
         </div>
 
         <!-- 结果展示区 -->
-        <!-- [创意升级] spotlight-group: 启用鼠标聚光灯效果 -->
         <div id="resultArea" class="hidden mt-10 spotlight-group">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- 1. 总分卡片 -->
                 <div id="card-score"
-                    class="lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window"
+                    class="lg:col-span-4 interactive-card ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window"
                     style="overflow: visible;">
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4 relative">
@@ -616,7 +619,6 @@ CPU: Intel Core Ultra 5 245KF
                                 <div class="relative group">
                                     <i
                                         class="fa-regular fa-circle-question text-xs ui-text-mute cursor-help rules-trigger hover:text-blue-500 transition-colors"></i>
-                                    <!-- 评分规则悬浮面板 -->
                                     <div class="rules-popover">
                                         <div
                                             class="text-[10px] font-bold ui-heading mb-2 border-b border-dashed border-gray-200 pb-1">
@@ -630,7 +632,7 @@ CPU: Intel Core Ultra 5 245KF
                                         <div class="rule-item"><span>旗舰/幻想</span><span
                                                 class="rule-score text-purple-500">120 +</span></div>
                                         <div class="mt-2 text-[9px] ui-text-mute leading-tight opacity-70">
-                                            * 总分包含硬实力(0-150)与偏好加成(0-10)，超过100分即代表超越主流平均水平。
+                                            * 总分包含硬实力(0-150)与偏好加成(0-10)。
                                         </div>
                                     </div>
                                 </div>
@@ -642,7 +644,6 @@ CPU: Intel Core Ultra 5 245KF
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
                             <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
-                            <!-- 分母改为 100 -->
                             <span class="text-lg ui-text-mute font-medium">/ 100</span>
                         </div>
 
@@ -659,7 +660,8 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
 
                 <!-- 2. 雷达图 -->
-                <div id="card-detail" class="lg:col-span-8 ui-card p-6 flex flex-col md:flex-row gap-8">
+                <div id="card-detail"
+                    class="lg:col-span-8 interactive-card ui-card p-6 flex flex-col md:flex-row gap-8">
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
                         <!-- 动态生成的进度条 -->
                         <div>
@@ -713,7 +715,7 @@ CPU: Intel Core Ultra 5 245KF
             </div>
 
             <!-- 3. 诊断结论 (Typewriter Effect) -->
-            <div id="card-summary" class="mb-6 ui-card p-8 summary-window">
+            <div id="card-summary" class="mb-6 interactive-card ui-card p-8 summary-window">
                 <div class="flex items-center gap-3 mb-4 pb-4 border-b" style="border-color: var(--c-border)">
                     <div
                         class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
@@ -907,22 +909,53 @@ CPU: Intel Core Ultra 5 245KF
         };
 
         window.addEventListener('load', function () {
-            // [核心修复] 初始化鼠标追踪逻辑，激活聚光灯
+            // [核心] 全局鼠标追踪 + JS 驱动的光效
+            // 1. 惯性跟踪光标
+            const cursor = { x: 0, y: 0, targetX: 0, targetY: 0 };
+            const config = {
+                lerpFactor: 0.1, // 惯性系数，越小越滑
+                breatheSpeed: 0.003, // 呼吸速度
+                baseSize: 800, // 光斑基础大小
+                sizeVariation: 100, // 呼吸时的尺寸变化范围
+                baseOpacity: 0.05, // 基础透明度
+                opacityVariation: 0.03 // 呼吸时的透明度变化范围
+            };
+
             document.addEventListener('mousemove', e => {
-                const cards = document.querySelectorAll('.ui-card');
+                cursor.targetX = e.clientX;
+                cursor.targetY = e.clientY;
+                document.body.classList.add('spotlight-active');
+            });
+
+            // 2. 动画循环 (RAF Loop)
+            function animateSpotlight() {
+                // 计算惯性坐标
+                cursor.x += (cursor.targetX - cursor.x) * config.lerpFactor;
+                cursor.y += (cursor.targetY - cursor.y) * config.lerpFactor;
+
+                // 计算呼吸因子 (双波叠加，更自然)
+                const time = Date.now();
+                const breathe = (Math.sin(time * config.breatheSpeed) + Math.sin(time * config.breatheSpeed * 1.5) + 2) / 4; // 0~1
+
+                const currentSize = config.baseSize + breathe * config.sizeVariation;
+                const currentOpacity = config.baseOpacity + breathe * config.opacityVariation;
+
+                // 更新所有卡片
+                const cards = document.querySelectorAll('.interactive-card');
                 cards.forEach(card => {
                     const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    card.style.setProperty('--mouse-x', `${x}px`);
-                    card.style.setProperty('--mouse-y', `${y}px`);
+                    const relX = cursor.x - rect.left;
+                    const relY = cursor.y - rect.top;
+
+                    card.style.setProperty('--mouse-x', `${relX}px`);
+                    card.style.setProperty('--mouse-y', `${relY}px`);
+                    card.style.setProperty('--spot-size', `${currentSize}px`);
+                    card.style.setProperty('--spot-opacity', currentOpacity);
                 });
-                // 为结果区域添加激活类
-                const resultArea = document.getElementById('resultArea');
-                if (resultArea && !resultArea.classList.contains('spotlight-active')) {
-                    resultArea.classList.add('spotlight-active');
-                }
-            });
+
+                requestAnimationFrame(animateSpotlight);
+            }
+            animateSpotlight(); // 启动循环
 
             ThemeManager.init();
             ChartManager.init();
@@ -947,16 +980,15 @@ CPU: Intel Core Ultra 5 245KF
 
             const contextItems = extractHardwareContext(text);
             if (contextItems.length > 0) {
-                // [创意升级] 解密文字效果
-                detectedTags.innerHTML = ''; // Clear first
+                detectedTags.innerHTML = '';
                 contextItems.forEach(item => {
+                    // 解密动画逻辑
                     const name = item.split('|')[0].replace('[已识别]', '').trim();
                     const span = document.createElement('span');
-                    span.className = 'px-2 py-1 ui-tag text-[10px] ui-tag-enter';
-                    span.innerText = name; // 先显示文字，后续可扩展 scramble
+                    span.className = 'px-2 py-1 ui-tag text-[10px] ui-tag-enter mr-2 mb-1';
+                    span.innerText = name;
                     detectedTags.appendChild(span);
 
-                    // Simple scramble effect simulation
                     const originalText = name;
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
                     let iterations = 0;
@@ -979,15 +1011,18 @@ CPU: Intel Core Ultra 5 245KF
 
         function extractHardwareContext(text) {
             if (typeof HARDWARE_DB === 'undefined') return [];
-            let lowerText = text.toLowerCase().replace(/\s+/g, ' ');
+            // [核心修复] 移除所有空格进行匹配
+            let normalizeText = text.toLowerCase().replace(/\s+/g, '');
             let matches = [];
             let matchedKeys = new Set();
             for (const [alias, realKey] of Object.entries(ALIAS_MAP_KEYS)) {
-                if (lowerText.includes(alias) && !matchedKeys.has(realKey)) {
-                    const item = HARDWARE_DB[realKey];
-                    if (item) {
-                        matches.push(`[已识别] ${item.name} | Score: ${item.score} | Price: $${item.price} (via "${alias}")`);
-                        matchedKeys.add(realKey);
+                if (normalizeText.includes(alias)) {
+                    if (!matchedKeys.has(realKey)) {
+                        const item = HARDWARE_DB[realKey];
+                        if (item) {
+                            matches.push(`[已识别] ${item.name} | Score: ${item.score} | Price: $${item.price} (via "${alias}")`);
+                            matchedKeys.add(realKey);
+                        }
                     }
                 }
             }
@@ -1005,8 +1040,6 @@ CPU: Intel Core Ultra 5 245KF
             const inputCard = document.getElementById('inputCard');
 
             btn.disabled = true;
-            inputCard.classList.add('analyzing'); // 激活脉冲
-
             let loadingStep = 0;
             const loadingTexts = ["连接 DeepSeek 分析引擎...", "读取硬件参数...", "交叉比对 2025 数据库...", "生成兼容性报告...", "计算最终得分..."];
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[0]}`;
@@ -1059,12 +1092,9 @@ CPU: Intel Core Ultra 5 245KF
                 clearInterval(loadingInterval);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
-                inputCard.classList.remove('analyzing'); // 停止脉冲
             }
         }
 
-        // [前沿] 模拟流式打字机效果 (Simulated Streaming)
-        // 逐字解析 Markdown，增强 AI 的"思考感"
         function typeWriterEffect(text, elementId, speed = 15) {
             const el = document.getElementById(elementId);
             let i = 0;
@@ -1072,14 +1102,11 @@ CPU: Intel Core Ultra 5 245KF
 
             function type() {
                 if (i < text.length) {
-                    // 每次多打几个字，避免太慢
                     const chunk = text.slice(0, i + 3);
                     i += 3;
-                    // 实时解析 markdown
                     el.innerHTML = marked.parse(chunk) + '<span class="cursor-blink"></span>';
                     requestAnimationFrame(type);
                 } else {
-                    // 结束，移除光标
                     el.innerHTML = marked.parse(text);
                 }
             }
@@ -1087,7 +1114,6 @@ CPU: Intel Core Ultra 5 245KF
         }
 
         function renderUI(data) {
-            // 安全重置：确保所有组件可见
             const elements = {
                 score: document.getElementById('card-score'),
                 detail: document.getElementById('card-detail'),
@@ -1096,12 +1122,10 @@ CPU: Intel Core Ultra 5 245KF
                 footer: document.getElementById('footer-text')
             };
 
-            // 强制移除 hidden 类
             Object.values(elements).forEach(el => {
                 if (el) el.classList.remove('reveal-hidden');
             });
 
-            // 填充数据
             const finalScore = data.total_score !== undefined ? data.total_score : data.score;
 
             if (window.CountUp) {
@@ -1143,9 +1167,6 @@ CPU: Intel Core Ultra 5 245KF
             setBar('bar-comp', data.sub_scores.compatibility);
             setBar('bar-qual', data.sub_scores.quality);
 
-            // [前沿] 使用打字机效果替代直接赋值
-            // document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
-            // 延迟一点点，等卡片滑上来再开始打字
             setTimeout(() => {
                 typeWriterEffect(data.summary, 'aiSummary');
             }, 600);
@@ -1166,7 +1187,8 @@ CPU: Intel Core Ultra 5 245KF
                     }[m.type] || 'fa-circle-info';
 
                     const div = document.createElement('div');
-                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item reveal-hidden animate-slide-up`;
+                    // [核心修复] 给模块卡片也加上 interactive-card 类，支持光效
+                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item reveal-hidden animate-slide-up interactive-card`;
                     div.style.animationDelay = `${600 + (index * 100)}ms`;
 
                     div.innerHTML = `
@@ -1181,8 +1203,6 @@ CPU: Intel Core Ultra 5 245KF
 
             ChartManager.createOrUpdate(data);
 
-            // 触发动画 (先移除类，触发 Reflow，再添加类) - 但这里我们已经在上面移除了 hidden
-            // 为了安全起见，我们重新添加动画类
             requestAnimationFrame(() => {
                 elements.score.classList.add('animate-pop-up');
 
