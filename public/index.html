@@ -14,86 +14,74 @@
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <!-- 引入 CountUp.js 用于数字滚动 -->
     <script src="https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js"></script>
     <script src="hardware_data.js" defer></script>
 
-    <!-- 
-        [核心] 样式系统 
-        这里的 CSS 变量初始值由 JS 在运行时注入，
-        CSS 仅负责定义使用这些变量的规则。
-    -->
     <style>
-        /* ================= 基础过渡与排版 ================= */
+        /* ================= 基础布局与过渡 ================= */
         :root {
-            /* [新增] 全局统一过渡配置，解决不同步问题 */
-            --dur-theme: 0.4s;
-            --ease-theme: cubic-bezier(0.4, 0, 0.2, 1);
-            /* 组合过渡属性：背景、颜色、边框、填充色 */
-            --trans-theme: background-color var(--dur-theme) var(--ease-theme),
-                color var(--dur-theme) var(--ease-theme),
-                border-color var(--dur-theme) var(--ease-theme),
-                fill var(--dur-theme) var(--ease-theme);
+            /* 定义全局统一的过渡节奏，解决不同步问题 */
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+            --duration-theme: 0.4s;
         }
 
         body {
             font-family: 'Noto Sans SC', sans-serif;
+            /* 颜色变量将在 JS 中动态生成并注入 */
             background-color: var(--c-page-bg);
             color: var(--c-text-main);
-            /* 强制统一 */
-            transition: var(--trans-theme);
+            transition: background-color var(--duration-theme) var(--ease-out-quart),
+                color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* ================= 组件微交互 (Micro-interactions) ================= */
+        /* ================= 组件系统 (UI Kit) ================= */
 
-        /* 1. 物理感卡片 */
+        /* 1. 卡片 */
         .ui-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-
-            /* [优化] 分离过渡属性：
-               1. transform/box-shadow 用于 hover 物理效果，保持各自节奏
-               2. background-color/border-color 用于主题切换，强制跟随全局节奏
-            */
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.3s ease,
-                background-color var(--dur-theme) var(--ease-theme),
-                border-color var(--dur-theme) var(--ease-theme);
+            /* 分离物理动画(transform)与主题动画(color)，互不干扰 */
+            transition: transform 0.3s var(--ease-out-quart),
+                box-shadow 0.3s var(--ease-out-quart),
+                background-color var(--duration-theme) var(--ease-out-quart),
+                border-color var(--duration-theme) var(--ease-out-quart);
         }
 
         .ui-card:hover {
             transform: translateY(-4px);
-            /* 悬浮抬起 */
             box-shadow: var(--shadow-hover);
-            /* 阴影加深 */
             border-color: var(--c-primary-light);
-            /* 边框微亮 */
         }
 
-        /* 2. 呼吸感输入框 */
+        /* 2. 导航栏 */
+        .ui-nav {
+            background-color: var(--c-nav-bg);
+            border-bottom: 1px solid var(--c-border);
+            backdrop-filter: blur(12px);
+            transition: background-color var(--duration-theme) var(--ease-out-quart),
+                border-color var(--duration-theme) var(--ease-out-quart);
+        }
+
+        /* 3. 输入框 (重点修复对象) */
         .ui-input {
             background-color: var(--c-input-bg);
             border: 1px solid var(--c-border);
             color: var(--c-text-head);
             border-radius: 0.75rem;
-
-            /* [优化] 解决输入框不同步问题：
-               主题属性使用全局 --trans-theme
-               Focus 光晕 (box-shadow) 使用快速过渡，避免迟滞
-            */
-            transition: background-color var(--dur-theme) var(--ease-theme),
-                border-color var(--dur-theme) var(--ease-theme),
-                color var(--dur-theme) var(--ease-theme),
+            /* 强制与 body 保持完全一致的颜色过渡 */
+            transition: background-color var(--duration-theme) var(--ease-out-quart),
+                border-color var(--duration-theme) var(--ease-out-quart),
+                color var(--duration-theme) var(--ease-out-quart),
                 box-shadow 0.2s ease-out;
+            /* 阴影单独处理，保持灵敏 */
         }
 
         .ui-input:focus {
             border-color: var(--c-primary);
             background-color: var(--c-card-bg);
             box-shadow: 0 0 0 4px var(--c-focus-ring);
-            /* 柔和光晕 */
             outline: none;
         }
 
@@ -102,28 +90,20 @@
             opacity: 0.6;
         }
 
-        /* 3. 按钮点击反馈 */
+        /* 4. 按钮 */
         .ui-btn-primary {
             background-color: var(--c-primary);
             color: #ffffff;
             font-weight: 600;
             border-radius: 0.75rem;
             box-shadow: var(--shadow-sm);
-            /* 按钮通常包含背景色变化，统一节奏 */
-            transition: transform 0.1s, box-shadow 0.2s, background-color var(--dur-theme) var(--ease-theme);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.2s var(--ease-out-quart);
         }
 
         .ui-btn-primary:hover {
             background-color: var(--c-primary-hover);
             transform: translateY(-1px);
             box-shadow: var(--shadow-hover);
-        }
-
-        .ui-btn-primary:active {
-            transform: translateY(1px);
-            box-shadow: none;
         }
 
         .ui-btn-primary:disabled {
@@ -134,151 +114,37 @@
             box-shadow: none;
         }
 
-        /* ================= 电影感入场动画 (Cinematic Reveal) ================= */
-
-        /* 基础隐藏状态 */
-        .reveal-hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* 1. 弹跳入场 (Pop Up) - 用于总分卡片 */
-        @keyframes popUp {
-            0% {
-                opacity: 0;
-                transform: scale(0.9) translateY(20px);
-            }
-
-            60% {
-                opacity: 1;
-                transform: scale(1.02) translateY(-5px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .animate-pop-up {
-            animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            visibility: visible;
-        }
-
-        /* 2. 展开入场 (Scale Unfold) - 用于雷达图 */
-        @keyframes unfold {
-            0% {
-                opacity: 0;
-                transform: scaleY(0.8);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scaleY(1);
-            }
-        }
-
-        .animate-unfold {
-            animation: unfold 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            visibility: visible;
-        }
-
-        /* 3. 滑动入场 (Slide Up) - 用于列表项 */
-        @keyframes slideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.5s ease-out forwards;
-            visibility: visible;
-        }
-
-        /* 延迟类 Utility */
-        .delay-100 {
-            animation-delay: 100ms;
-        }
-
-        .delay-200 {
-            animation-delay: 200ms;
-        }
-
-        .delay-300 {
-            animation-delay: 300ms;
-        }
-
-        .delay-400 {
-            animation-delay: 400ms;
-        }
-
-        .delay-500 {
-            animation-delay: 500ms;
-        }
-
-        /* 列表项交错动画生成 (支持到 10 个项目) */
-        .stagger-item:nth-child(1) {
-            animation-delay: 400ms;
-        }
-
-        .stagger-item:nth-child(2) {
-            animation-delay: 500ms;
-        }
-
-        .stagger-item:nth-child(3) {
-            animation-delay: 600ms;
-        }
-
-        .stagger-item:nth-child(4) {
-            animation-delay: 700ms;
-        }
-
-        .stagger-item:nth-child(5) {
-            animation-delay: 800ms;
-        }
-
-        /* ================= 辅助类 ================= */
-        .ui-nav {
-            background-color: var(--c-nav-bg);
-            border-bottom: 1px solid var(--c-border);
-            backdrop-filter: blur(12px);
-            transition: var(--trans-theme);
-        }
-
+        /* 5. 标签 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
             border: 1px solid var(--c-border);
             font-weight: 500;
-            transition: var(--trans-theme);
+            transition: background-color var(--duration-theme) var(--ease-out-quart),
+                color var(--duration-theme) var(--ease-out-quart),
+                border-color var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* ================= 辅助类 ================= */
         .ui-heading {
             color: var(--c-text-head);
-            transition: color var(--dur-theme) var(--ease-theme);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .ui-text-highlight {
             color: var(--c-primary);
-            transition: color var(--dur-theme) var(--ease-theme);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .ui-text-mute {
             color: var(--c-text-mute);
-            transition: color var(--dur-theme) var(--ease-theme);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* Markdown 适配 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 600;
-            transition: color var(--dur-theme) var(--ease-theme);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .markdown-content p {
@@ -290,21 +156,19 @@
             list-style-type: disc;
             padding-left: 1.2em;
             color: var(--c-text-mute);
-            transition: color var(--dur-theme) var(--ease-theme);
         }
 
-        /* 进度条 */
         .progress-track {
             background-color: var(--c-border);
             border-radius: 99px;
             height: 0.5rem;
             overflow: hidden;
-            transition: background-color var(--dur-theme) var(--ease-theme);
+            transition: background-color var(--duration-theme) var(--ease-out-quart);
         }
 
         .progress-fill {
             height: 100%;
-            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1), background-color var(--dur-theme) var(--ease-theme);
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1), background-color var(--duration-theme) var(--ease-out-quart);
             background-color: var(--c-primary);
         }
 
@@ -313,45 +177,29 @@
             background: var(--s-success-bg);
             border-color: var(--s-success-border);
             color: var(--s-success-text);
-            transition: var(--trans-theme);
         }
 
         .state-warning {
             background: var(--s-warning-bg);
             border-color: var(--s-warning-border);
             color: var(--s-warning-text);
-            transition: var(--trans-theme);
         }
 
         .state-danger {
             background: var(--s-danger-bg);
             border-color: var(--s-danger-border);
             color: var(--s-danger-text);
-            transition: var(--trans-theme);
         }
 
         .state-info {
             background: var(--c-input-bg);
             border-color: var(--c-border);
             color: var(--c-text-main);
-            transition: var(--trans-theme);
         }
 
-        /* 装饰背景 */
         .summary-window {
             background-image: radial-gradient(circle at top right, var(--c-glow), transparent 70%);
-            transition: background-image var(--dur-theme) var(--ease-theme);
-        }
-
-        /* Loading 动画 */
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-spin {
-            animation: spin 1s linear infinite;
+            transition: background-image var(--duration-theme) var(--ease-out-quart);
         }
 
         /* 滚动条 */
@@ -366,7 +214,94 @@
         ::-webkit-scrollbar-thumb {
             background: var(--c-border);
             border-radius: 3px;
-            transition: background-color var(--dur-theme) var(--ease-theme);
+        }
+
+        /* ================= 电影感动画 (Cinematic Reveal) ================= */
+        .reveal-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        @keyframes popUp {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-pop-up {
+            animation: popUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            visibility: visible;
+        }
+
+        @keyframes unfold {
+            0% {
+                opacity: 0;
+                transform: scaleY(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+
+        .animate-unfold {
+            animation: unfold 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            visibility: visible;
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+            visibility: visible;
+        }
+
+        /* 延迟控制 */
+        .stagger-item:nth-child(1) {
+            animation-delay: 100ms;
+        }
+
+        .stagger-item:nth-child(2) {
+            animation-delay: 200ms;
+        }
+
+        .stagger-item:nth-child(3) {
+            animation-delay: 300ms;
+        }
+
+        .stagger-item:nth-child(4) {
+            animation-delay: 400ms;
+        }
+
+        .stagger-item:nth-child(5) {
+            animation-delay: 500ms;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-spin {
+            animation: spin 1s linear infinite;
         }
     </style>
 </head>
@@ -385,7 +320,6 @@
                             class="ui-text-highlight">诊断室</span></h1>
                 </div>
 
-                <!-- 主题切换按钮 -->
                 <button id="themeToggleBtn"
                     class="w-9 h-9 flex items-center justify-center rounded-full border border-transparent hover:border-current transition-all text-slate-400 hover:text-blue-500"
                     aria-label="切换模式">
@@ -406,7 +340,7 @@
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
                 把配置单发给我<br>
-                <span style="color: var(--c-primary); transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                <span style="color: var(--c-primary); transition: color 0.4s var(--ease-out-quart);">
                     深度评估硬件实力
                 </span>
             </h2>
@@ -415,8 +349,8 @@
             </p>
         </div>
 
-        <!-- 输入卡片 -->
-        <div class="ui-card overflow-hidden animate-slide-up delay-100">
+        <!-- 输入区 -->
+        <div class="ui-card overflow-hidden animate-slide-up" style="animation-delay: 100ms;">
             <textarea id="configInput"
                 class="w-full h-40 ui-input p-6 resize-none text-base font-mono border-0 rounded-none bg-transparent"
                 placeholder="在此粘贴配置单...
@@ -465,7 +399,7 @@ CPU: Intel Core Ultra 5 245KF
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- 1. 总分卡片 (Pop Up) -->
                 <div id="card-score"
-                    class="reveal-hidden lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
+                    class="lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
@@ -475,7 +409,6 @@ CPU: Intel Core Ultra 5 245KF
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
-                            <!-- 这里的 ID 用于 CountUp.js 滚动动画 -->
                             <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
                             <span class="text-lg ui-text-mute font-medium">/ 150</span>
                         </div>
@@ -492,10 +425,9 @@ CPU: Intel Core Ultra 5 245KF
                     </div>
                 </div>
 
-                <!-- 2. 雷达图 & 进度条 (Unfold & Fade) -->
-                <div id="card-detail" class="reveal-hidden lg:col-span-8 ui-card p-6 flex flex-col md:flex-row gap-8">
+                <!-- 2. 雷达图 (Unfold) -->
+                <div id="card-detail" class="lg:col-span-8 ui-card p-6 flex flex-col md:flex-row gap-8">
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
-                        <!-- 动态生成的进度条 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold ui-text-mute"><i
@@ -547,7 +479,7 @@ CPU: Intel Core Ultra 5 245KF
             </div>
 
             <!-- 3. 诊断结论 (Slide Up) -->
-            <div id="card-summary" class="reveal-hidden mb-6 ui-card p-8 summary-window">
+            <div id="card-summary" class="mb-6 ui-card p-8 summary-window">
                 <div class="flex items-center gap-3 mb-4 pb-4 border-b" style="border-color: var(--c-border)">
                     <div
                         class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
@@ -563,16 +495,16 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- 4. 详细模块 (Staggered Slide) -->
+            <!-- 4. 详细模块 -->
             <div>
                 <h3 id="modules-title"
-                    class="reveal-hidden text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
+                    class="text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i> 详细检查项目
                 </h3>
                 <div id="aiModulesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
 
-            <div class="text-center mt-12 mb-8 reveal-hidden" id="footer-text">
+            <div class="text-center mt-12 mb-8" id="footer-text">
                 <p class="text-[10px] ui-text-mute uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB
                 </p>
             </div>
@@ -581,77 +513,75 @@ CPU: Intel Core Ultra 5 245KF
 
     <script>
         /**
-         * [核心] 颜色配置表 (Configuration Table)
-         * 这是全站颜色的唯一真理来源。JS 会自动将其注入 CSS 变量，
-         * 并供 Chart.js 等组件读取。
+         * [核心] 配置表驱动的颜色系统
+         * 这是一个单一真理源。
+         * initTheme() 函数会将这些配置编译成 CSS 变量注入到文档头部，
+         * 从而利用浏览器原生的 CSS 引擎进行高性能、无延迟的颜色切换。
          */
         const COLOR_CONFIG = {
             light: {
-                pageBg: '#f0f4f8',          // 极淡蓝灰
-                cardBg: '#ffffff',          // 纯白
-                navBg: 'rgba(255, 255, 255, 0.9)',
-
-                textMain: '#334155',        // Slate-700
-                textHead: '#1e293b',        // Slate-800
-                textMute: '#64748b',        // Slate-500
-                primary: '#2563eb',         // Blue-600
-                primaryHover: '#1d4ed8',    // Blue-700
-                primaryLight: '#dbeafe',    // Blue-100 (边框高亮用)
-
-                border: '#e2e8f0',          // Slate-200
-                inputBg: '#f8fafc',         // Slate-50
-                focusRing: 'rgba(37, 99, 235, 0.15)',
-                glow: 'rgba(59, 130, 246, 0.08)', // 卡片光晕
-
-                // 阴影
-                shadowSm: '0 1px 2px 0 rgba(15, 23, 42, 0.05)',
-                shadowHover: '0 10px 25px -5px rgba(59, 130, 246, 0.15)',
-
-                // 状态色 (背景/文字/边框)
-                successBg: '#ecfdf5', successText: '#059669', successBorder: '#d1fae5',
-                warningBg: '#fffbeb', warningText: '#b45309', warningBorder: '#fef3c7',
-                dangerBg: '#fff1f2', dangerText: '#be123c', dangerBorder: '#ffe4e6',
-                infoBg: '#f8fafc', infoText: '#334155', infoBorder: '#e2e8f0',
-
-                // 偏好加成 (Indigo)
-                bonusBg: '#e0e7ff', bonusText: '#3730a3', bonusBorder: '#c7d2fe'
+                '--c-page-bg': '#f0f4f8',
+                '--c-card-bg': '#ffffff',
+                '--c-nav-bg': 'rgba(255, 255, 255, 0.9)',
+                '--c-text-main': '#334155',
+                '--c-text-head': '#1e293b',
+                '--c-text-mute': '#64748b',
+                '--c-primary': '#2563eb',
+                '--c-primary-hover': '#1d4ed8',
+                '--c-primary-light': '#dbeafe',
+                '--c-border': '#e2e8f0',
+                '--c-input-bg': '#f8fafc',
+                '--c-focus-ring': 'rgba(37, 99, 235, 0.15)',
+                '--c-glow': 'rgba(59, 130, 246, 0.08)',
+                '--shadow-sm': '0 1px 2px 0 rgba(15, 23, 42, 0.05)',
+                '--shadow-hover': '0 10px 25px -5px rgba(59, 130, 246, 0.15)',
+                '--s-success-bg': '#ecfdf5', '--s-success-text': '#059669', '--s-success-border': '#d1fae5',
+                '--s-warning-bg': '#fffbeb', '--s-warning-text': '#b45309', '--s-warning-border': '#fef3c7',
+                '--s-danger-bg': '#fff1f2', '--s-danger-text': '#be123c', '--s-danger-border': '#ffe4e6',
+                '--s-info-bg': '#f8fafc', '--s-info-text': '#334155', '--s-info-border': '#e2e8f0',
+                '--s-bonus-bg': '#e0e7ff', '--s-bonus-text': '#3730a3', '--s-bonus-border': '#c7d2fe'
             },
             dark: {
-                pageBg: '#0f172a',          // Slate-900 (Deep Blue)
-                cardBg: '#1e293b',          // Slate-800
-                navBg: 'rgba(15, 23, 42, 0.9)',
-
-                textMain: '#cbd5e1',        // Slate-300
-                textHead: '#f1f5f9',        // Slate-100
-                textMute: '#94a3b8',        // Slate-400
-                primary: '#60a5fa',         // Blue-400 (Lighter for dark mode)
-                primaryHover: '#3b82f6',    // Blue-500
-                primaryLight: '#334155',    // Slate-700
-
-                border: '#334155',          // Slate-700
-                inputBg: '#0f172a',         // Match page bg
-                focusRing: 'rgba(96, 165, 250, 0.2)',
-                glow: 'rgba(96, 165, 250, 0.08)',
-
-                // 阴影
-                shadowSm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-                shadowHover: '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
-
-                // 状态色 (背景更深，文字更亮)
-                successBg: '#064e3b', successText: '#6ee7b7', successBorder: '#065f46',
-                warningBg: '#451a03', warningText: '#fcd34d', warningBorder: '#78350f',
-                dangerBg: '#4c0519', dangerText: '#fda4af', dangerBorder: '#881337',
-                infoBg: '#1e293b', infoText: '#cbd5e1', infoBorder: '#334155',
-
-                // 偏好加成
-                bonusBg: '#312e81', bonusText: '#c7d2fe', bonusBorder: '#4338ca'
+                '--c-page-bg': '#0f172a',
+                '--c-card-bg': '#1e293b',
+                '--c-nav-bg': 'rgba(15, 23, 42, 0.9)',
+                '--c-text-main': '#cbd5e1',
+                '--c-text-head': '#f1f5f9',
+                '--c-text-mute': '#94a3b8',
+                '--c-primary': '#60a5fa',
+                '--c-primary-hover': '#3b82f6',
+                '--c-primary-light': '#334155',
+                '--c-border': '#334155',
+                '--c-input-bg': '#0f172a',
+                '--c-focus-ring': 'rgba(96, 165, 250, 0.2)',
+                '--c-glow': 'rgba(96, 165, 250, 0.08)',
+                '--shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+                '--shadow-hover': '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
+                '--s-success-bg': '#064e3b', '--s-success-text': '#6ee7b7', '--s-success-border': '#065f46',
+                '--s-warning-bg': '#451a03', '--s-warning-text': '#fcd34d', '--s-warning-border': '#78350f',
+                '--s-danger-bg': '#4c0519', '--s-danger-text': '#fda4af', '--s-danger-border': '#881337',
+                '--s-info-bg': '#1e293b', '--s-info-text': '#cbd5e1', '--s-info-border': '#334155',
+                '--s-bonus-bg': '#312e81', '--s-bonus-text': '#c7d2fe', '--s-bonus-border': '#4338ca'
             }
         };
+
+        // 动态生成 CSS 样式表，确保切换零延迟
+        function generateThemeStyles() {
+            let styleContent = `
+                :root { ${Object.entries(COLOR_CONFIG.light).map(([k, v]) => `${k}: ${v};`).join(' ')} }
+                html.dark { ${Object.entries(COLOR_CONFIG.dark).map(([k, v]) => `${k}: ${v};`).join(' ')} }
+            `;
+            const styleEl = document.createElement('style');
+            styleEl.id = 'theme-variables';
+            styleEl.innerHTML = styleContent;
+            document.head.appendChild(styleEl);
+        }
 
         const ThemeManager = {
             currentMode: 'light',
 
             init() {
+                generateThemeStyles(); // [修复] 优先生成样式
                 const stored = localStorage.getItem('theme');
                 const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const h = new Date().getHours();
@@ -668,74 +598,45 @@ CPU: Intel Core Ultra 5 245KF
                 this.currentMode = mode;
                 localStorage.setItem('theme', mode);
 
-                // 1. 设置 HTML 类 (用于 Tailwind 工具类兜底)
+                // 只切换 class，样式由 CSS 变量自动接管，实现完美同步
                 if (mode === 'dark') document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
 
-                // 2. 注入 CSS 变量 (Core)
-                const colors = COLOR_CONFIG[mode];
-                const root = document.documentElement;
-
-                // 映射 Config 到 CSS Variables
-                const mapping = {
-                    '--c-page-bg': colors.pageBg,
-                    '--c-card-bg': colors.cardBg,
-                    '--c-nav-bg': colors.navBg,
-                    '--c-text-main': colors.textMain,
-                    '--c-text-head': colors.textHead,
-                    '--c-text-mute': colors.textMute,
-                    '--c-primary': colors.primary,
-                    '--c-primary-hover': colors.primaryHover,
-                    '--c-primary-light': colors.primaryLight,
-                    '--c-border': colors.border,
-                    '--c-input-bg': colors.inputBg,
-                    '--c-focus-ring': colors.focusRing,
-                    '--c-glow': colors.glow,
-                    '--shadow-sm': colors.shadowSm,
-                    '--shadow-hover': colors.shadowHover,
-
-                    '--s-success-bg': colors.successBg, '--s-success-text': colors.successText, '--s-success-border': colors.successBorder,
-                    '--s-warning-bg': colors.warningBg, '--s-warning-text': colors.warningText, '--s-warning-border': colors.warningBorder,
-                    '--s-danger-bg': colors.dangerBg, '--s-danger-text': colors.dangerText, '--s-danger-border': colors.dangerBorder,
-                    '--s-info-bg': colors.infoBg, '--s-info-text': colors.infoText, '--s-info-border': colors.infoBorder,
-                    '--s-bonus-bg': colors.bonusBg, '--s-bonus-text': colors.bonusText, '--s-bonus-border': colors.bonusBorder
-                };
-
-                for (const [key, value] of Object.entries(mapping)) {
-                    root.style.setProperty(key, value);
-                }
-
-                // 3. 通知图表更新
+                // 通知图表更新 (Canvas 需要 JS 重绘)
                 if (window.ChartManager) ChartManager.handleThemeChange(mode);
             },
 
-            getColors() { return COLOR_CONFIG[this.currentMode]; }
+            getColors() {
+                // 辅助函数：将 CSS 变量值转换为 Hex/RGB 供 JS 使用
+                // 这里简单直接返回配置对象
+                return COLOR_CONFIG[this.currentMode];
+            }
         };
 
         const ChartManager = {
             chartInstance: null,
-
-            init() {
-                // 等待 ThemeManager 就绪
-            },
-
+            init() { /* Wait */ },
             getFontSize() { return window.innerWidth < 640 ? 8 : 10; },
 
             createOrUpdate(data) {
                 const ctx = document.getElementById('radarChart').getContext('2d');
-                const colors = ThemeManager.getColors(); // 直接从配置表读颜色
+                const mode = ThemeManager.currentMode;
+                const colors = COLOR_CONFIG[mode];
                 const fontSize = this.getFontSize();
 
                 this.currentData = data;
                 if (this.chartInstance) this.chartInstance.destroy();
 
-                // 将 Hex 转为 RGB 供透明度使用
+                // Hex to RGBA helper
                 const hexToRgba = (hex, alpha) => {
                     const r = parseInt(hex.slice(1, 3), 16);
                     const g = parseInt(hex.slice(3, 5), 16);
                     const b = parseInt(hex.slice(5, 7), 16);
                     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
                 };
+
+                const primary = colors['--c-primary'];
+                const mute = colors['--c-text-mute'];
 
                 this.chartInstance = new Chart(ctx, {
                     type: 'radar',
@@ -744,22 +645,22 @@ CPU: Intel Core Ultra 5 245KF
                         datasets: [{
                             label: '评分',
                             data: [data.sub_scores.performance, data.sub_scores.value, data.sub_scores.compatibility, data.sub_scores.quality],
-                            backgroundColor: hexToRgba(colors.primary, 0.2),
-                            borderColor: colors.primary,
+                            backgroundColor: hexToRgba(primary, 0.2),
+                            borderColor: primary,
                             borderWidth: 2,
                             pointRadius: 0,
                             pointHoverRadius: 4,
-                            pointBackgroundColor: colors.primary
+                            pointBackgroundColor: primary
                         }]
                     },
                     options: {
                         scales: {
                             r: {
                                 suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
-                                grid: { color: hexToRgba(colors.textMute, 0.1) },
-                                angleLines: { color: hexToRgba(colors.textMute, 0.1) },
+                                grid: { color: hexToRgba(mute, 0.1) },
+                                angleLines: { color: hexToRgba(mute, 0.1) },
                                 pointLabels: {
-                                    color: colors.textMute,
+                                    color: mute,
                                     font: { size: fontSize, family: "'Noto Sans SC', sans-serif" }
                                 }
                             }
@@ -779,7 +680,7 @@ CPU: Intel Core Ultra 5 245KF
 
         // ================= 业务逻辑 =================
         window.addEventListener('load', function () {
-            ThemeManager.init(); // 启动主题引擎
+            ThemeManager.init();
             ChartManager.init();
 
             if (typeof HARDWARE_DB === 'undefined') {
@@ -790,7 +691,7 @@ CPU: Intel Core Ultra 5 245KF
             }
         });
 
-        // 简单的输入即识别 (Real-time Perception)
+        // 简单的输入即识别
         const ALIAS_MAP_KEYS = typeof ALIAS_MAP !== 'undefined' ? ALIAS_MAP : {};
         document.getElementById('configInput').addEventListener('input', function (e) {
             const text = e.target.value;
@@ -802,7 +703,6 @@ CPU: Intel Core Ultra 5 245KF
                 return;
             }
 
-            // 简单的防抖模拟 (实际不需要太复杂，本地查找很快)
             const contextItems = extractHardwareContext(text);
             if (contextItems.length > 0) {
                 detectedTags.innerHTML = contextItems.map(item => {
@@ -840,18 +740,10 @@ CPU: Intel Core Ultra 5 245KF
             const resultArea = document.getElementById('resultArea');
             const errorArea = document.getElementById('errorArea');
             const detectedBar = document.getElementById('detectedHardwareBar');
-            const detectedTags = document.getElementById('detectedTags');
 
-            // 1. 禁用按钮并显示 Loading
             btn.disabled = true;
             let loadingStep = 0;
-            const loadingTexts = [
-                "连接 DeepSeek 分析引擎...",
-                "正在读取硬件参数...",
-                "交叉比对 2025 数据库...",
-                "生成兼容性报告...",
-                "计算最终得分..."
-            ];
+            const loadingTexts = ["连接 DeepSeek 分析引擎...", "读取硬件参数...", "交叉比对 2025 数据库...", "生成兼容性报告...", "计算最终得分..."];
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[0]}`;
 
             const loadingInterval = setInterval(() => {
@@ -859,40 +751,30 @@ CPU: Intel Core Ultra 5 245KF
                 btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[loadingStep]}`;
             }, 2500);
 
-            document.getElementById('scanLine').style.display = 'block';
-
-            // 2. [核心修复] 精准重置动画状态，而不是隐藏整个父容器
-            // 先显示大容器，这样子元素才能被看到
+            // 显示大容器（关键修复：永远不隐藏 resultArea 容器本身，只隐藏内部子元素）
             resultArea.classList.remove('hidden');
 
-            // 定义需要重置动画的元素 ID
-            const animatedIds = ['card-score', 'card-detail', 'card-summary', 'modules-title', 'footer-text'];
+            // 重置所有子元素的动画状态
+            const resetTargets = [
+                document.getElementById('card-score'),
+                document.getElementById('card-detail'),
+                document.getElementById('card-summary'),
+                document.getElementById('modules-title'),
+                document.getElementById('footer-text'),
+                document.getElementById('aiModulesContainer') // 清空容器内容即可
+            ];
 
-            animatedIds.forEach(id => {
-                const el = document.getElementById(id);
+            resetTargets.forEach(el => {
                 if (el) {
-                    // 添加 reveal-hidden 类以隐藏它们 (opacity: 0)
                     el.classList.add('reveal-hidden');
-                    // 移除之前的动画类，确保下次添加时能触发动画
                     el.classList.remove('animate-pop-up', 'animate-unfold', 'animate-slide-up');
                 }
             });
 
-            // 隐藏错误区和检测条
             errorArea.classList.add('hidden');
             detectedBar.classList.add('hidden');
 
             const contextItems = extractHardwareContext(input);
-            if (contextItems.length > 0) {
-                detectedTags.innerHTML = contextItems.map(item => {
-                    const name = item.split('|')[0].replace('[已识别]', '').trim();
-                    return `<span class="px-2 py-0.5 theme-tag rounded text-[10px] font-medium truncate max-w-[150px]">${name}</span>`;
-                }).join('');
-                detectedBar.classList.remove('hidden');
-            } else {
-                detectedTags.innerHTML = `<span class="theme-text-muted text-[10px]">通用分析模式</span>`;
-                detectedBar.classList.remove('hidden');
-            }
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -913,27 +795,34 @@ CPU: Intel Core Ultra 5 245KF
                 console.error("Analysis Error:", error);
                 document.getElementById('errorText').innerText = "服务暂时不可用，请稍后重试。";
                 errorArea.classList.remove('hidden');
-                // 如果出错，也要移除 loading
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
+                // 错误时显示容器，但只显示错误
+                document.getElementById('errorArea').classList.remove('reveal-hidden');
+                document.getElementById('errorArea').classList.add('animate-slide-up');
             } finally {
                 clearInterval(loadingInterval);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
-                document.getElementById('scanLine').style.display = 'none';
             }
         }
 
         function renderUI(data) {
-            const resultArea = document.getElementById('resultArea');
+            // ================= 1. 安全重置：确保所有元素可见性被清除 =================
+            const elements = {
+                score: document.getElementById('card-score'),
+                detail: document.getElementById('card-detail'),
+                summary: document.getElementById('card-summary'),
+                title: document.getElementById('modules-title'),
+                footer: document.getElementById('footer-text')
+            };
 
-            // 1. 确保大容器可见
-            resultArea.classList.remove('hidden');
+            // 强制移除 hidden 类，防止动画脚本未执行导致永久消失
+            Object.values(elements).forEach(el => {
+                if (el) el.classList.remove('hidden');
+            });
 
-            // ================= 数据填充 =================
+            // ================= 2. 数据填充 =================
             const finalScore = data.total_score !== undefined ? data.total_score : data.score;
 
-            // 数字滚动动画
             if (window.CountUp) {
                 const countUp = new CountUp('scoreDisplay', finalScore, { duration: 2.5 });
                 if (!countUp.error) countUp.start();
@@ -942,7 +831,6 @@ CPU: Intel Core Ultra 5 245KF
                 document.getElementById('scoreDisplay').innerText = finalScore;
             }
 
-            // 状态色
             const verdictEl = document.getElementById('verdictBadge');
             let verdictClass = 'state-info';
             if (finalScore >= 120) verdictClass = 'state-success';
@@ -950,11 +838,9 @@ CPU: Intel Core Ultra 5 245KF
             verdictEl.className = `px-3 py-1 rounded-md text-xs font-bold transition-colors ${verdictClass}`;
             verdictEl.innerText = data.verdict;
 
-            // 偏好标签
             const prefContainer = document.getElementById('prefContainer');
             if (data.is_preference_match && data.preference_bonus > 0) {
                 prefContainer.classList.remove('hidden');
-                // 使用 CSS 变量控制颜色
                 prefContainer.innerHTML = `
                     <span class="text-[10px] px-2 py-1 rounded shadow-sm flex items-center gap-1 w-fit" 
                           style="background-color: var(--s-bonus-bg); color: var(--s-bonus-text); border: 1px solid var(--s-bonus-border)">
@@ -965,22 +851,19 @@ CPU: Intel Core Ultra 5 245KF
                 prefContainer.classList.add('hidden');
             }
 
-            // 进度条
             const setBar = (id, score) => {
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
-                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600); // 稍作延迟配合入场
+                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600);
             };
             setBar('bar-perf', data.sub_scores.performance);
             setBar('bar-val', data.sub_scores.value);
             setBar('bar-comp', data.sub_scores.compatibility);
             setBar('bar-qual', data.sub_scores.quality);
 
-            // 文本内容
             document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
 
-            // 模块生成
             const modContainer = document.getElementById('aiModulesContainer');
             modContainer.innerHTML = '';
             if (data.modules) {
@@ -997,9 +880,8 @@ CPU: Intel Core Ultra 5 245KF
                     }[m.type] || 'fa-circle-info';
 
                     const div = document.createElement('div');
-                    // 添加 stagger-item 类用于交错动画
-                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item animate-slide-up reveal-hidden`;
-                    // 动态计算延迟
+                    div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item reveal-hidden animate-slide-up`;
+                    // 动态延迟
                     div.style.animationDelay = `${600 + (index * 100)}ms`;
 
                     div.innerHTML = `
@@ -1012,40 +894,35 @@ CPU: Intel Core Ultra 5 245KF
                 });
             }
 
-            // 更新图表
             ChartManager.createOrUpdate(data);
 
-            // ================= [核心] 电影级入场序列 (Cinematic Reveal) =================
-            // 使用 requestAnimationFrame 确保 DOM 更新后触发重绘
+            // ================= 3. 触发动画序列 =================
             requestAnimationFrame(() => {
-                // 1. 总分卡片弹起 (Pop Up)
-                const cardScore = document.getElementById('card-score');
-                cardScore.classList.remove('reveal-hidden');
-                cardScore.classList.add('animate-pop-up');
+                // Pop Up Score
+                elements.score.classList.remove('reveal-hidden');
+                elements.score.classList.add('animate-pop-up');
 
-                // 2. 雷达图展开 (Unfold) - 延迟 200ms
+                // Unfold Detail
                 setTimeout(() => {
-                    const cardDetail = document.getElementById('card-detail');
-                    cardDetail.classList.remove('reveal-hidden');
-                    cardDetail.classList.add('animate-unfold');
+                    elements.detail.classList.remove('reveal-hidden');
+                    elements.detail.classList.add('animate-unfold');
                 }, 200);
 
-                // 3. 诊断书淡入 (Slide Up) - 延迟 400ms
+                // Slide Up Summary
                 setTimeout(() => {
-                    const cardSummary = document.getElementById('card-summary');
-                    cardSummary.classList.remove('reveal-hidden');
-                    cardSummary.classList.add('animate-slide-up');
+                    elements.summary.classList.remove('reveal-hidden');
+                    elements.summary.classList.add('animate-slide-up');
                 }, 400);
 
-                // 4. 标题和Footer - 延迟 600ms
+                // Slide Up Title & Footer
                 setTimeout(() => {
-                    document.getElementById('modules-title').classList.remove('reveal-hidden');
-                    document.getElementById('modules-title').classList.add('animate-slide-up');
+                    elements.title.classList.remove('reveal-hidden');
+                    elements.title.classList.add('animate-slide-up');
 
-                    document.getElementById('footer-text').classList.remove('reveal-hidden');
-                    document.getElementById('footer-text').classList.add('animate-slide-up');
+                    elements.footer.classList.remove('reveal-hidden');
+                    elements.footer.classList.add('animate-slide-up');
 
-                    // 模块本身的动画由 CSS animation-delay 控制，只需要移除 hidden 类
+                    // Modules (already have animation class, just need to remove hide)
                     document.querySelectorAll('.stagger-item').forEach(el => el.classList.remove('reveal-hidden'));
                 }, 600);
             });
