@@ -25,13 +25,23 @@
     -->
     <style>
         /* ================= 基础过渡与排版 ================= */
+        :root {
+            /* [新增] 全局统一过渡配置，解决不同步问题 */
+            --dur-theme: 0.4s;
+            --ease-theme: cubic-bezier(0.4, 0, 0.2, 1);
+            /* 组合过渡属性：背景、颜色、边框、填充色 */
+            --trans-theme: background-color var(--dur-theme) var(--ease-theme),
+                color var(--dur-theme) var(--ease-theme),
+                border-color var(--dur-theme) var(--ease-theme),
+                fill var(--dur-theme) var(--ease-theme);
+        }
+
         body {
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--c-page-bg);
             color: var(--c-text-main);
-            /* 关键：让颜色变化平滑，但不要太慢 */
-            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 强制统一 */
+            transition: var(--trans-theme);
         }
 
         /* ================= 组件微交互 (Micro-interactions) ================= */
@@ -42,11 +52,15 @@
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-            /* 复合变换：位置+阴影+边框 */
+
+            /* [优化] 分离过渡属性：
+               1. transform/box-shadow 用于 hover 物理效果，保持各自节奏
+               2. background-color/border-color 用于主题切换，强制跟随全局节奏
+            */
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
                 box-shadow 0.3s ease,
-                border-color 0.3s ease,
-                background-color 0.3s ease;
+                background-color var(--dur-theme) var(--ease-theme),
+                border-color var(--dur-theme) var(--ease-theme);
         }
 
         .ui-card:hover {
@@ -64,7 +78,15 @@
             border: 1px solid var(--c-border);
             color: var(--c-text-head);
             border-radius: 0.75rem;
-            transition: all 0.3s ease-out;
+
+            /* [优化] 解决输入框不同步问题：
+               主题属性使用全局 --trans-theme
+               Focus 光晕 (box-shadow) 使用快速过渡，避免迟滞
+            */
+            transition: background-color var(--dur-theme) var(--ease-theme),
+                border-color var(--dur-theme) var(--ease-theme),
+                color var(--dur-theme) var(--ease-theme),
+                box-shadow 0.2s ease-out;
         }
 
         .ui-input:focus {
@@ -87,7 +109,8 @@
             font-weight: 600;
             border-radius: 0.75rem;
             box-shadow: var(--shadow-sm);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            /* 按钮通常包含背景色变化，统一节奏 */
+            transition: transform 0.1s, box-shadow 0.2s, background-color var(--dur-theme) var(--ease-theme);
             position: relative;
             overflow: hidden;
         }
@@ -225,6 +248,7 @@
             background-color: var(--c-nav-bg);
             border-bottom: 1px solid var(--c-border);
             backdrop-filter: blur(12px);
+            transition: var(--trans-theme);
         }
 
         .ui-tag {
@@ -232,24 +256,29 @@
             color: var(--c-text-mute);
             border: 1px solid var(--c-border);
             font-weight: 500;
+            transition: var(--trans-theme);
         }
 
         .ui-heading {
             color: var(--c-text-head);
+            transition: color var(--dur-theme) var(--ease-theme);
         }
 
         .ui-text-highlight {
             color: var(--c-primary);
+            transition: color var(--dur-theme) var(--ease-theme);
         }
 
         .ui-text-mute {
             color: var(--c-text-mute);
+            transition: color var(--dur-theme) var(--ease-theme);
         }
 
         /* Markdown 适配 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 600;
+            transition: color var(--dur-theme) var(--ease-theme);
         }
 
         .markdown-content p {
@@ -261,6 +290,7 @@
             list-style-type: disc;
             padding-left: 1.2em;
             color: var(--c-text-mute);
+            transition: color var(--dur-theme) var(--ease-theme);
         }
 
         /* 进度条 */
@@ -269,11 +299,12 @@
             border-radius: 99px;
             height: 0.5rem;
             overflow: hidden;
+            transition: background-color var(--dur-theme) var(--ease-theme);
         }
 
         .progress-fill {
             height: 100%;
-            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1), background-color var(--dur-theme) var(--ease-theme);
             background-color: var(--c-primary);
         }
 
@@ -282,29 +313,34 @@
             background: var(--s-success-bg);
             border-color: var(--s-success-border);
             color: var(--s-success-text);
+            transition: var(--trans-theme);
         }
 
         .state-warning {
             background: var(--s-warning-bg);
             border-color: var(--s-warning-border);
             color: var(--s-warning-text);
+            transition: var(--trans-theme);
         }
 
         .state-danger {
             background: var(--s-danger-bg);
             border-color: var(--s-danger-border);
             color: var(--s-danger-text);
+            transition: var(--trans-theme);
         }
 
         .state-info {
             background: var(--c-input-bg);
             border-color: var(--c-border);
             color: var(--c-text-main);
+            transition: var(--trans-theme);
         }
 
         /* 装饰背景 */
         .summary-window {
             background-image: radial-gradient(circle at top right, var(--c-glow), transparent 70%);
+            transition: background-image var(--dur-theme) var(--ease-theme);
         }
 
         /* Loading 动画 */
@@ -330,6 +366,7 @@
         ::-webkit-scrollbar-thumb {
             background: var(--c-border);
             border-radius: 3px;
+            transition: background-color var(--dur-theme) var(--ease-theme);
         }
     </style>
 </head>
@@ -337,7 +374,7 @@
 <body class="min-h-screen flex flex-col">
 
     <!-- 导航栏 -->
-    <nav class="ui-nav p-4 sticky top-0 z-50 transition-colors duration-300">
+    <nav class="ui-nav p-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center max-w-5xl">
             <div class="flex items-center gap-4 shrink-0">
                 <div class="flex items-center space-x-2">
@@ -369,7 +406,7 @@
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
                 把配置单发给我<br>
-                <span style="color: var(--c-primary); transition: color 0.3s;">
+                <span style="color: var(--c-primary); transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
                     深度评估硬件实力
                 </span>
             </h2>
@@ -396,7 +433,7 @@ CPU: Intel Core Ultra 5 245KF
                 <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="p-4 border-t flex justify-between items-center"
+            <div class="p-4 border-t flex justify-between items-center transition-colors"
                 style="border-color: var(--c-border); background-color: var(--c-card-bg);">
                 <div class="text-xs ui-text-mute flex items-center gap-2">
                     <span id="dbStatus" class="flex items-center gap-1.5"><i
