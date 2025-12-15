@@ -12,11 +12,22 @@ app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// [修改] 调试阶段将 maxAge 设为 0，防止浏览器缓存旧代码
-// 等项目完全定型上线后，再改回 '1d'
+// [新增] 强制全局禁用缓存中间件 (暴力模式)
+// 确保浏览器每次请求都必须从服务器获取最新内容，彻底杜绝 304 缓存
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    next();
+});
+
+// [修改] 静态资源服务配置
+// 配合上面的中间件，进一步关闭静态文件的 ETag 和 Last-Modified
 app.use(express.static(path.join(__dirname, 'public'), {
-    maxAge: '0', 
-    etag: false // 关闭 ETag 也有助于强制刷新
+    maxAge: '0',        // 立即过期
+    etag: false,        // 关闭 ETag 协商
+    lastModified: false // 关闭最后修改时间检查
 }));
 
 app.post('/api/analyze', async (req, res) => {
