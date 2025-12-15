@@ -31,12 +31,10 @@
             transition: background-color var(--duration-theme) var(--ease-out-quart),
                 color var(--duration-theme) var(--ease-out-quart);
             position: relative;
-            /* For noise overlay */
+            overflow-x: hidden;
         }
 
-        /* [前沿设计] 噪点纹理叠加 (Noise Overlay) 
-           给纯色背景增加“胶片感”和“物理质感”，消除廉价的塑料感。
-        */
+        /* [质感纹理] 保持 image_ab6902.png 的高级质感 */
         body::before {
             content: "";
             position: fixed;
@@ -44,24 +42,28 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            background-image: url('image_ab6902.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.4;
-            /* 淡淡的纹理 */
+            opacity: 0.15;
             mix-blend-mode: overlay;
+            filter: grayscale(100%);
         }
 
         /* ================= 动态组件系统 (UI Kit) ================= */
 
-        /* 1. 卡片 */
         .ui-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-            transition: transform 0.3s var(--ease-out-quart),
-                box-shadow 0.3s var(--ease-out-quart),
+            /* 增加 backdrop-filter 模拟毛玻璃/厚纸张 */
+            backdrop-filter: blur(8px);
+            transition: transform 0.4s var(--ease-out-quart),
+                box-shadow 0.4s var(--ease-out-quart),
                 background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
@@ -72,16 +74,14 @@
             border-color: var(--c-primary-light);
         }
 
-        /* 2. 导航栏 */
         .ui-nav {
             background-color: var(--c-nav-bg);
             border-bottom: 1px solid var(--c-border);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
             transition: background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 3. 输入框 (透明化处理) */
         .ui-input-transparent {
             width: 100%;
             background-color: transparent;
@@ -90,11 +90,12 @@
             padding: 1.5rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 1rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            /* 保持较好的行距 */
             resize: none;
             outline: none;
-            /* [修改] 调整高度为原来的 1.5 倍 (10rem -> 15rem) */
             height: 15rem;
+            /* 保持 1.5 倍高度 */
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
@@ -131,19 +132,19 @@
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 4. 按钮 */
         .ui-btn-primary {
             background-color: var(--c-primary);
             color: #ffffff;
             font-weight: 600;
             border-radius: 0.75rem;
             box-shadow: var(--shadow-sm);
-            transition: all 0.2s var(--ease-out-quart);
+            letter-spacing: 0.05em;
+            transition: all 0.3s var(--ease-out-quart);
         }
 
         .ui-btn-primary:hover {
             background-color: var(--c-primary-hover);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
             box-shadow: var(--shadow-hover);
         }
 
@@ -155,7 +156,6 @@
             box-shadow: none;
         }
 
-        /* 5. 标签 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
@@ -182,18 +182,16 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* [修改] Markdown 增强排版：增加间距，优化阅读体验 */
+        /* Markdown 样式 */
         .markdown-content strong {
             color: var(--c-primary);
-            font-weight: 600;
+            font-weight: 700;
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .markdown-content p {
             margin-bottom: 1em;
-            /* 增加段落间距 */
-            line-height: 1.75;
-            /* 增加行高 */
+            line-height: 1.8;
         }
 
         .markdown-content ul {
@@ -205,23 +203,25 @@
 
         .markdown-content li {
             margin-bottom: 0.5em;
-            /* 列表项增加间距 */
         }
 
         .markdown-content h3 {
-            font-size: 1.1em;
-            font-weight: 700;
+            font-size: 1.2em;
+            font-weight: 800;
             margin-top: 1.5em;
             margin-bottom: 0.75em;
             color: var(--c-text-head);
+            border-bottom: 2px solid var(--c-border);
+            padding-bottom: 0.25em;
+            display: inline-block;
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* [前沿] 打字机光标效果 */
+        /* 光标动画 */
         .cursor-blink {
             display: inline-block;
-            width: 2px;
-            height: 1em;
+            width: 3px;
+            height: 1.1em;
             background-color: var(--c-primary);
             margin-left: 2px;
             vertical-align: text-bottom;
@@ -236,8 +236,8 @@
 
         .progress-track {
             background-color: var(--c-border);
-            border-radius: 99px;
-            height: 0.5rem;
+            border-radius: 2px;
+            height: 0.6rem;
             overflow: hidden;
             transition: background-color var(--duration-theme) var(--ease-out-quart);
         }
@@ -299,75 +299,83 @@
         @keyframes popUp {
             0% {
                 opacity: 0;
-                transform: scale(0.95) translateY(20px);
+                transform: scale(0.9) translateY(40px);
+                /* 加大位移 */
+                filter: blur(10px);
+                /* 光学模糊 */
                 visibility: visible;
             }
 
             100% {
                 opacity: 1;
                 transform: scale(1) translateY(0);
+                filter: blur(0);
                 visibility: visible;
             }
         }
 
         .animate-pop-up {
-            animation: popUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: popUp 0.8s var(--ease-out-quart) forwards;
         }
 
         @keyframes unfold {
             0% {
                 opacity: 0;
-                transform: scaleY(0.9);
+                transform: scaleY(0.85) translateY(20px);
+                filter: blur(8px);
                 visibility: visible;
             }
 
             100% {
                 opacity: 1;
-                transform: scaleY(1);
+                transform: scaleY(1) translateY(0);
+                filter: blur(0);
                 visibility: visible;
             }
         }
 
         .animate-unfold {
-            animation: unfold 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: unfold 0.7s var(--ease-out-quart) forwards;
         }
 
         @keyframes slideUp {
             0% {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
+                filter: blur(5px);
                 visibility: visible;
             }
 
             100% {
                 opacity: 1;
                 transform: translateY(0);
+                filter: blur(0);
                 visibility: visible;
             }
         }
 
         .animate-slide-up {
-            animation: slideUp 0.5s ease-out forwards;
+            animation: slideUp 0.6s var(--ease-out-quart) forwards;
         }
 
         .stagger-item:nth-child(1) {
-            animation-delay: 100ms;
+            animation-delay: 150ms;
         }
 
         .stagger-item:nth-child(2) {
-            animation-delay: 200ms;
-        }
-
-        .stagger-item:nth-child(3) {
             animation-delay: 300ms;
         }
 
+        .stagger-item:nth-child(3) {
+            animation-delay: 450ms;
+        }
+
         .stagger-item:nth-child(4) {
-            animation-delay: 400ms;
+            animation-delay: 600ms;
         }
 
         .stagger-item:nth-child(5) {
-            animation-delay: 500ms;
+            animation-delay: 750ms;
         }
 
         @keyframes spin {
@@ -412,7 +420,7 @@
         </div>
     </nav>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl">
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative z-10">
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
                 把配置单发给我<br>
@@ -855,8 +863,7 @@ CPU: Intel Core Ultra 5 245KF
             }
         }
 
-        // [前沿] 模拟流式打字机效果 (Simulated Streaming)
-        // 逐字解析 Markdown，增强 AI 的"思考感"
+        // [核心功能] 标准流式打字机效果 (移除任何自定义的高亮逻辑)
         function typeWriterEffect(text, elementId, speed = 15) {
             const el = document.getElementById(elementId);
             let i = 0;
