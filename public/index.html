@@ -19,60 +19,41 @@
     <style>
         /* ================= [核心] CSS 变量定义系统 (语义化) ================= */
         :root {
-            /* 白天模式 (Slate 风格) */
+            /* 白天模式 */
             --bg-page: #f8fafc;
-            /* slate-50 */
             --bg-card: #ffffff;
-            /* white */
             --bg-nav: rgba(255, 255, 255, 0.85);
 
             --text-main: #334155;
-            /* slate-700 */
             --text-heading: #1e293b;
-            /* slate-800 */
             --text-muted: #94a3b8;
-            /* slate-400 */
             --text-highlight: #2563eb;
-            /* blue-600 */
 
             --border-color: #e2e8f0;
-            /* slate-200 */
             --input-bg: #ffffff;
-            --input-border: #cbd5e1;
 
-            /* 阴影与特效 */
             --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
             --scan-line-color: rgba(59, 130, 246, 0.8);
 
-            /* 功能色 */
             --tag-bg: #f1f5f9;
             --tag-text: #64748b;
         }
 
-        /* 黑夜模式 (深邃蓝灰风格) */
+        /* 黑夜模式 */
         html.dark {
             --bg-page: #0f172a;
-            /* slate-900 */
             --bg-card: #1e293b;
-            /* slate-800 */
             --bg-nav: rgba(15, 23, 42, 0.85);
 
             --text-main: #cbd5e1;
-            /* slate-300 */
             --text-heading: #f8fafc;
-            /* slate-50 */
             --text-muted: #64748b;
-            /* slate-500 */
             --text-highlight: #60a5fa;
-            /* blue-400 */
 
             --border-color: #334155;
-            /* slate-700 */
             --input-bg: #1e293b;
-            --input-border: #475569;
 
-            /* 黑夜模式增强阴影，解决“不匹配”问题 */
             --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             --scan-line-color: rgba(96, 165, 250, 0.8);
@@ -81,18 +62,17 @@
             --tag-text: #94a3b8;
         }
 
-        /* ================= 基础重置与过渡 ================= */
+        /* 基础重置 */
         body {
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--bg-page);
             color: var(--text-main);
-            /* 统一过渡，防止切换时颜色闪烁或不匹配 */
             transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 0.3s ease;
         }
 
-        /* ================= 语义化组件类 (强制覆盖 Tailwind) ================= */
+        /* 语义化组件 */
         .theme-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -124,7 +104,6 @@
         .theme-input {
             background-color: var(--input-bg);
             border: 1px solid transparent;
-            /* 默认无边框，focus时显示 */
             color: var(--text-main);
             transition: all 0.3s;
         }
@@ -186,7 +165,34 @@
             width: 0%;
         }
 
-        /* Markdown */
+        /* Loading 状态动画文字 */
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '.';
+            }
+
+            40% {
+                content: '..';
+            }
+
+            60% {
+                content: '...';
+            }
+
+            80%,
+            100% {
+                content: '';
+            }
+        }
+
+        /* Markdown & Scrollbar */
         .markdown-content strong {
             color: var(--text-highlight);
         }
@@ -202,14 +208,6 @@
             margin-bottom: 0.8em;
         }
 
-        .markdown-content h3 {
-            font-size: 1.1em;
-            font-weight: 700;
-            margin-top: 1em;
-            color: var(--text-heading);
-        }
-
-        /* 滚动条 */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -223,23 +221,17 @@
             border-radius: 3px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
         .summary-window {
             background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.03), transparent 50%);
         }
     </style>
 
     <script>
-        // 内联初始化：防止FOUC
         (function () {
             try {
                 const stored = localStorage.getItem('theme');
                 const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const h = new Date().getHours();
-
                 let mode = stored ? stored : (sysDark ? 'dark' : (h >= 18 || h < 6 ? 'dark' : 'light'));
                 if (mode === 'dark') document.documentElement.classList.add('dark');
             } catch (e) { }
@@ -301,7 +293,7 @@
             </p>
         </div>
 
-        <!-- 输入区：完全使用 theme-card，移除所有 Tailwind 颜色类 -->
+        <!-- 输入区 -->
         <div class="theme-card theme-card-float rounded-2xl overflow-hidden relative group">
             <div class="scan-line" id="scanLine"></div>
 
@@ -327,7 +319,7 @@ CPU: Intel Core Ultra 5 245KF
                         正在加载数据库...</span>
                 </div>
                 <button onclick="startAnalysis()" id="scanBtn"
-                    class="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                    class="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm min-w-[140px] justify-center">
                     <i class="fa-solid fa-microscope"></i> 开始诊断
                 </button>
             </div>
@@ -350,9 +342,8 @@ CPU: Intel Core Ultra 5 245KF
 
         <div id="resultArea" class="hidden mt-10 transition-all duration-700 opacity-0 transform translate-y-4">
 
-            <!-- 评分卡片区 -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                <!-- 总分卡片 -->
+                <!-- 总分 -->
                 <div
                     class="lg:col-span-4 theme-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden">
                     <div
@@ -368,17 +359,11 @@ CPU: Intel Core Ultra 5 245KF
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
-                            <!-- 
-                                分数展示逻辑修改：
-                                总分可能会超过 150 (Base 150 + Bonus 10)，
-                                但分母依然显示 / 150，制造一种“爆表”的感觉。
-                            -->
                             <span class="text-7xl font-black tracking-tighter theme-heading transition-colors"
                                 id="scoreDisplay">--</span>
                             <span class="text-lg theme-text-muted font-medium">/ 150</span>
                         </div>
 
-                        <!-- 偏好分标签：视觉降级，更精致 -->
                         <div id="prefContainer" class="hidden mb-6 rounded-lg transition-all"></div>
 
                         <div
@@ -396,7 +381,6 @@ CPU: Intel Core Ultra 5 245KF
                 <!-- 维度分析 & 雷达图 -->
                 <div class="lg:col-span-8 theme-card rounded-2xl p-6 flex flex-col md:flex-row gap-8">
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
-                        <!-- 进度条 Max 调整为 150 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold theme-text-muted"><i
@@ -448,7 +432,6 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- AI 诊断结论书 -->
             <div class="mb-6 relative">
                 <div class="absolute inset-0 bg-blue-600/5 dark:bg-blue-900/10 translate-y-2 rounded-2xl"></div>
                 <div
@@ -471,7 +454,6 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- 模块化检查结果 -->
             <div>
                 <h3
                     class="text-xs font-bold theme-text-muted uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
@@ -488,7 +470,6 @@ CPU: Intel Core Ultra 5 245KF
     </main>
 
     <script>
-        // ================= ThemeManager (纯净版) =================
         const ThemeManager = {
             observers: [],
             subscribe(fn) { this.observers.push(fn); },
@@ -509,13 +490,20 @@ CPU: Intel Core Ultra 5 245KF
 
         ThemeManager.init();
 
-        // ================= ChartManager =================
         const ChartManager = {
             chartInstance: null,
             init() { ThemeManager.subscribe((isDark) => this.handleThemeChange(isDark)); },
+
+            // [优化] 增加移动端字体大小判断
+            getFontSize() {
+                return window.innerWidth < 640 ? 8 : 10;
+            },
+
             createOrUpdate(data) {
                 const ctx = document.getElementById('radarChart').getContext('2d');
                 const isDark = document.documentElement.classList.contains('dark');
+                const fontSize = this.getFontSize();
+
                 this.currentData = data;
                 if (this.chartInstance) this.chartInstance.destroy();
                 this.chartInstance = new Chart(ctx, {
@@ -538,13 +526,12 @@ CPU: Intel Core Ultra 5 245KF
                     options: {
                         scales: {
                             r: {
-                                // Max 调整为 150
                                 suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
                                 grid: { color: this.getGridColor(isDark) },
                                 angleLines: { color: this.getGridColor(isDark) },
                                 pointLabels: {
                                     color: isDark ? '#94a3b8' : '#64748b',
-                                    font: { size: 10, family: "'Noto Sans SC', sans-serif" }
+                                    font: { size: fontSize, family: "'Noto Sans SC', sans-serif" }
                                 }
                             }
                         },
@@ -589,7 +576,6 @@ CPU: Intel Core Ultra 5 245KF
         };
         ChartManager.init();
 
-        // ================= Business Logic =================
         window.addEventListener('load', function () {
             if (typeof HARDWARE_DB === 'undefined') {
                 console.error("Critical: hardware_data.js failed to load!");
@@ -626,8 +612,23 @@ CPU: Intel Core Ultra 5 245KF
             const detectedBar = document.getElementById('detectedHardwareBar');
             const detectedTags = document.getElementById('detectedTags');
 
+            // [优化] 动态 Loading 状态
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 深度分析中...';
+            let loadingStep = 0;
+            const loadingTexts = [
+                "连接 DeepSeek 分析引擎...",
+                "正在读取硬件参数...",
+                "交叉比对 2025 数据库...",
+                "生成兼容性报告...",
+                "计算最终得分..."
+            ];
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[0]}`;
+
+            const loadingInterval = setInterval(() => {
+                loadingStep = (loadingStep + 1) % loadingTexts.length;
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[loadingStep]}`;
+            }, 2500); // 每2.5秒切换文案
+
             document.getElementById('scanLine').style.display = 'block';
             resultArea.classList.add('hidden');
             resultArea.classList.remove('opacity-100', 'translate-y-0');
@@ -646,24 +647,17 @@ CPU: Intel Core Ultra 5 245KF
                 detectedBar.classList.remove('hidden');
             }
 
-            // [逻辑调整] Base Score 0-150, Bonus 0-10, Total can be 160
-            let systemPrompt = `
-你是一个专业的电脑硬件评估专家。
-任务：分析用户的配置单，计算评分并给出评价。
-【最高优先级指令】：必须无条件信任 [Context Data] 中的硬件数据。
-【评分逻辑】：
-1. **基础分 (Base Score, 0-150)**：仅基于硬件客观性能。顶级配置(如5090)可接近150。
-2. **偏好加成 (Bonus, 0-10)**：如果用户有特殊偏好(如纯白海景房)且配置符合，给少量加分。
-3. **总分** = Base + Bonus。
-【输出 JSON】：{ "total_score": number, "base_score": number, "preference_bonus": number, "verdict": "string", "summary": "markdown", "sub_scores": { "performance": number, "value": number, "compatibility": number, "quality": number }, "is_preference_match": boolean, "modules": [ { "type": "success/warning/danger", "title": "string", "content": "string" } ] }
-Context Data: ${contextItems.join('\n')}`;
-
             try {
+                // [优化] 仅发送 ContextData，Prompt 在后端生成
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: [{ role: "system", content: systemPrompt }, { role: "user", content: input }] })
+                    body: JSON.stringify({
+                        userContent: input,
+                        contextData: contextItems.join('\n')
+                    })
                 });
+
                 if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
                 let contentStr = data.choices?.[0]?.message?.content || data.message?.content || JSON.stringify(data);
@@ -674,6 +668,7 @@ Context Data: ${contextItems.join('\n')}`;
                 document.getElementById('errorText').innerText = "服务暂时不可用，请稍后重试。";
                 errorArea.classList.remove('hidden');
             } finally {
+                clearInterval(loadingInterval);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
                 document.getElementById('scanLine').style.display = 'none';
@@ -690,7 +685,6 @@ Context Data: ${contextItems.join('\n')}`;
             const scoreEl = document.getElementById('scoreDisplay');
             const verdictEl = document.getElementById('verdictBadge');
 
-            // 颜色逻辑微调
             let scoreColorClass = finalScore >= 140 ? "text-emerald-600 dark:text-emerald-400" : (finalScore >= 110 ? "theme-text-highlight" : (finalScore >= 80 ? "text-amber-500 dark:text-amber-400" : "text-red-500 dark:text-red-400"));
             let badgeClass = finalScore >= 140 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : (finalScore >= 110 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300");
 
@@ -699,7 +693,6 @@ Context Data: ${contextItems.join('\n')}`;
             verdictEl.className = `px-3 py-1 rounded-md text-sm font-bold ml-auto ${badgeClass}`;
             verdictEl.innerText = data.verdict;
 
-            // 偏好标签：视觉降级为精致小标
             const prefContainer = document.getElementById('prefContainer');
             prefContainer.classList.remove('hidden');
             if (data.is_preference_match && data.preference_bonus > 0) {
@@ -710,11 +703,10 @@ Context Data: ${contextItems.join('\n')}`;
                     </span>
                 `;
             } else {
-                prefContainer.className = "hidden"; // 如果没有加成直接隐藏，保持界面清爽
+                prefContainer.className = "hidden";
                 prefContainer.innerHTML = "";
             }
 
-            // 进度条 Max = 150
             const setBar = (id, score, max = 150) => {
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
