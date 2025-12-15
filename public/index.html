@@ -76,9 +76,10 @@
                     <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 font-normal">Database
                         2025</span></h1>
             </div>
+            <!-- 设置按钮主要用于调试，生产环境可以隐藏或保留用于修改后端地址 -->
             <button onclick="toggleSettings()"
                 class="text-slate-500 hover:text-blue-600 text-sm flex items-center gap-1 transition-colors"><i
-                    class="fa-solid fa-gear"></i> 模型设置</button>
+                    class="fa-solid fa-gear"></i> 设置</button>
         </div>
     </nav>
 
@@ -86,25 +87,20 @@
     <div id="settingsModal"
         class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl">
-            <h3 class="text-xl font-bold text-slate-800 mb-4">API 配置</h3>
-            <div class="mb-4 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-                <i class="fa-solid fa-triangle-exclamation"></i> 必须配置有效的 DeepSeek API Key 才能进行分析。
+            <h3 class="text-xl font-bold text-slate-800 mb-4">服务器配置</h3>
+            <div class="mb-4 text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+                <i class="fa-solid fa-info-circle"></i> 如果您已部署到 Render，此处通常无需修改。
             </div>
-            <label class="block text-slate-700 text-xs font-bold mb-1">API Endpoint (Base URL)</label>
-            <input type="text" id="apiBaseUrl" value="https://api.deepseek.com"
+            <label class="block text-slate-700 text-xs font-bold mb-1">后端 API 地址</label>
+            <input type="text" id="apiBaseUrl"
                 class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-3 text-sm placeholder-slate-400"
-                placeholder="https://api.deepseek.com">
-            <label class="block text-slate-700 text-xs font-bold mb-1">API Key</label>
-            <input type="password" id="apiKey"
-                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-3 text-sm"
-                placeholder="sk-...">
-            <label class="block text-slate-700 text-xs font-bold mb-1">Model Name</label>
-            <input type="text" id="modelName" value="deepseek-chat"
-                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-4 text-sm">
+                placeholder="例如: https://your-app.onrender.com">
+            <p class="text-xs text-slate-400 mb-4">*留空则默认使用当前页面的相对路径 /api/analyze</p>
+
             <div class="flex justify-end gap-2">
-                <button onclick="toggleSettings()" class="px-4 py-2 text-slate-500 text-sm">取消</button>
+                <button onclick="toggleSettings()" class="px-4 py-2 text-slate-500 text-sm">关闭</button>
                 <button onclick="saveSettings()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">保存配置</button>
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">保存</button>
             </div>
         </div>
     </div>
@@ -151,7 +147,7 @@ CPU: Intel Core Ultra 5 245KF
         <!-- 错误提示区域 -->
         <div id="errorArea" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
             role="alert">
-            <strong class="font-bold">分析失败！</strong>
+            <strong class="font-bold">连接失败！</strong>
             <span class="block sm:inline" id="errorText"></span>
             <span class="absolute top-0 bottom-0 right-0 px-4 py-3"
                 onclick="document.getElementById('errorArea').classList.add('hidden')">
@@ -265,25 +261,26 @@ CPU: Intel Core Ultra 5 245KF
         // ==========================================
         // 2. 配置与工具函数
         // ==========================================
-        const DEFAULT_CONFIG = { baseUrl: "https://api.deepseek.com", apiKey: "", model: "deepseek-chat" };
+        // 默认后端地址，如果是前端分离部署，这里留空会自动请求相对路径
+        const DEFAULT_CONFIG = { baseUrl: "", apiKey: "" }; // 这里的 apiKey 实际上不再在前端使用，留空即可
         let radarChart = null;
 
-        function loadConfig() { return JSON.parse(localStorage.getItem('ai_config')) || DEFAULT_CONFIG; }
+        function loadConfig() {
+            const stored = localStorage.getItem('ai_config');
+            return stored ? JSON.parse(stored) : DEFAULT_CONFIG;
+        }
 
         function toggleSettings() {
             const modal = document.getElementById('settingsModal');
             const cfg = loadConfig();
             document.getElementById('apiBaseUrl').value = cfg.baseUrl;
-            document.getElementById('apiKey').value = cfg.apiKey;
-            document.getElementById('modelName').value = cfg.model;
             modal.classList.toggle('hidden');
         }
 
         function saveSettings() {
             const config = {
                 baseUrl: document.getElementById('apiBaseUrl').value,
-                apiKey: document.getElementById('apiKey').value,
-                model: document.getElementById('modelName').value
+                apiKey: "" // 前端不需要存 Key
             };
             localStorage.setItem('ai_config', JSON.stringify(config));
             toggleSettings();
@@ -304,7 +301,7 @@ CPU: Intel Core Ultra 5 245KF
                     if (!matchedKeys.has(realKey)) {
                         const item = HARDWARE_DB[realKey];
                         if (item) {
-                            matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: $${item.price} (识别自 "${alias}")`);
+                            matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: ${item.price} (识别自 "${alias}")`);
                             matchedKeys.add(realKey);
                         }
                     }
@@ -321,7 +318,7 @@ CPU: Intel Core Ultra 5 245KF
 
                     if (!isAlreadyCovered) {
                         const item = HARDWARE_DB[key];
-                        matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: $${item.price} (Source: Local DB)`);
+                        matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: ${item.price} (Source: Local DB)`);
                         matchedKeys.add(key);
                     }
                 }
@@ -342,7 +339,7 @@ CPU: Intel Core Ultra 5 245KF
 
             // 重置状态
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接 DeepSeek 分析中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接服务器分析中...';
             document.getElementById('scanLine').style.display = 'block';
             resultArea.classList.add('hidden');
             resultArea.classList.remove('opacity-100');
@@ -350,16 +347,6 @@ CPU: Intel Core Ultra 5 245KF
             detectedBar.classList.add('hidden');
 
             const config = loadConfig();
-
-            // 校验 Key
-            if (!config.apiKey) {
-                showError("请点击右上角【模型设置】，填入您的 DeepSeek API Key 才能开始分析。");
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始体检';
-                document.getElementById('scanLine').style.display = 'none';
-                toggleSettings(); // 自动打开设置
-                return;
-            }
 
             // 1. 提取本地数据
             const contextItems = extractHardwareContext(input);
@@ -384,15 +371,15 @@ CPU: Intel Core Ultra 5 245KF
 【最高优先级指令 (CRITICAL)】：
 **必须无条件信任下方的 [提取到的关键数据]**。
 这些数据来自最新的内部数据库（包含 RTX 50系、Ryzen 9000系等）。
-如果数据中包含 "RTX 5060" 且分数为 20844，你**绝对不能**说它是笔误或不存在，必须基于这个分数进行性价比评估。
+如果数据中包含 "RTX 5060" 且分数为 20844，你**绝对不能**说它是笔误或不存在，必须基于这个分数和排名进行性价比评估。
 
 【评分标准】：
-   - 120-150: 顶级/未来级配置。
+   - 120-150: 顶级配置。
    - 90-119: 主流优秀配置。
    - 60-89: 入门/勉强可用。
    - <60: 存在硬伤或极其过时。
 
-【用户偏好】：如果包含“白色”、“RGB”等词，且配置符合，给予额外加分。
+【用户偏好】：如果包含“白色”、“RGB”等和性能无关的但是符合个性化配置的词，且配置符合，给予额外加分。
 
 【提取到的关键数据 (Context Data)】：
 ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中的核心硬件，请根据通用知识评估。"}
@@ -407,56 +394,71 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
     "modules": [ { "type": "success/warning/danger", "title": "标题", "content": "内容" } ]
 }`;
 
-            // 3. 调用 AI
+            // 3. 调用后端 API
             try {
-                let baseUrl = config.baseUrl.replace(/\/+$/, '');
-                // 智能修复 URL 路径
-                if (!baseUrl.endsWith('/chat/completions')) {
-                    if (baseUrl.includes('deepseek') || baseUrl.includes('/v1')) baseUrl += '/chat/completions';
+                // 确定 API 地址
+                // 如果 config.baseUrl 有值（用户手动填了 Render 地址），就用它
+                // 否则默认用 /api/analyze (适用于本地调试或同域部署)
+                let apiUrl = config.baseUrl ? config.baseUrl : '/api/analyze';
+
+                // 自动补全路径 (如果用户只填了域名)
+                if (config.baseUrl && !apiUrl.endsWith('/api/analyze')) {
+                    apiUrl = apiUrl.replace(/\/+$/, '') + '/api/analyze';
                 }
 
-                const response = await fetch(baseUrl, {
+                console.log("Requesting API:", apiUrl); // Debug log
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: config.model,
                         messages: [
                             { role: "system", content: systemPrompt },
                             { role: "user", content: input }
-                        ],
-                        temperature: 0.5,
-                        response_format: { type: "json_object" }
+                        ]
                     })
                 });
 
                 if (!response.ok) {
                     const errText = await response.text();
-                    throw new Error(`API 请求失败 (${response.status}): ${errText}`);
+                    throw new Error(`请求失败 (${response.status}): ${errText}`);
                 }
 
                 const data = await response.json();
-                const jsonStr = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                // 解析返回内容 (兼容不同的 API 响应结构)
+                let contentStr = "";
+                if (data.choices && data.choices.length > 0) {
+                    contentStr = data.choices[0].message.content;
+                } else if (data.message && data.message.content) {
+                    contentStr = data.message.content;
+                } else {
+                    contentStr = JSON.stringify(data); // 兜底
+                }
+
+                const jsonStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
                 renderUI(JSON.parse(jsonStr));
 
             } catch (error) {
                 console.error("API Error:", error);
                 let msg = error.message;
+
+                // 针对 CORS 或网络错误的友好提示
                 if (error.name === 'TypeError' && msg.includes('Failed to fetch')) {
-                    msg = "网络请求失败。<br>可能原因：<br>1. 浏览器跨域限制 (CORS)：DeepSeek API 官方不支持浏览器直连，请使用支持跨域的 API 代理。<br>2. 网络连接不通。<br>3. API 地址填写错误。<br><br>建议检查 API 配置或网络环境。";
+                    msg = `<strong>无法连接到服务器 (${config.baseUrl || '本地后端'})</strong><br><br>
+                           可能原因：<br>
+                           1. <strong>跨域限制 (CORS)</strong>：如果您在本地直接打开 HTML (file://)，浏览器会拦截请求。请确保您是通过 http://localhost:3000 访问，或将前端也部署到 Render。<br>
+                           2. <strong>地址错误</strong>：请检查设置中的“后端 API 地址”是否正确 (例如: https://my-app.onrender.com)。<br>
+                           3. <strong>服务器未启动</strong>：Render 免费版可能会休眠，请稍等 1 分钟再试。`;
                 }
-                showError(msg);
+
+                document.getElementById('errorText').innerHTML = msg;
+                errorArea.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始体检';
                 document.getElementById('scanLine').style.display = 'none';
             }
-        }
-
-        function showError(msg) {
-            const errorArea = document.getElementById('errorArea');
-            const errorText = document.getElementById('errorText');
-            errorText.innerHTML = msg;
-            errorArea.classList.remove('hidden');
         }
 
         // ==========================================
