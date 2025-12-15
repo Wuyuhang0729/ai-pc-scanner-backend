@@ -55,9 +55,19 @@
             }
         }
 
+        /* 优化 Markdown 内容排版，解决换行和间距问题 */
+        .markdown-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
         .markdown-content p {
-            margin-bottom: 0.6em;
-            line-height: 1.7;
+            margin-bottom: 0.75em;
+        }
+
+        /* 段落间增加间距 */
+        .markdown-content p:last-child {
+            margin-bottom: 0;
         }
 
         .markdown-content strong {
@@ -68,7 +78,17 @@
         .markdown-content ul {
             list-style-type: disc;
             padding-left: 1.2em;
-            margin-bottom: 0.6em;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content ol {
+            list-style-type: decimal;
+            padding-left: 1.2em;
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content li {
+            margin-bottom: 0.25em;
         }
     </style>
 </head>
@@ -366,9 +386,15 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
                         danger: { icon: 'fa-times-circle', color: 'text-red-500', border: 'border-red-100', bg: 'bg-red-50' }
                     }[m.type] || { icon: 'fa-info-circle', color: 'text-blue-500', border: 'border-blue-100', bg: 'bg-blue-50' };
 
+                    // 修复排版：让图标单独一列，标题和内容在右侧垂直排列，内容自动换行
                     const div = document.createElement('div');
-                    div.className = `p-4 rounded-lg border ${styles.border} ${styles.bg} flex gap-3`;
-                    div.innerHTML = `<i class="fa-solid ${styles.icon} ${styles.color} mt-1"></i><div><h4 class="font-bold text-sm text-slate-700">${m.title}</h4><div class="text-sm text-slate-600 markdown-content">${marked.parse(m.content)}</div></div>`;
+                    div.className = `p-4 rounded-lg border ${styles.border} ${styles.bg} flex items-start gap-3`;
+                    div.innerHTML = `
+                        <div class="flex-shrink-0 mt-1"><i class="fa-solid ${styles.icon} ${styles.color} text-lg"></i></div>
+                        <div class="flex-1 min-w-0"> <!-- min-w-0 用于确保 flex 子项正确换行 -->
+                            <h4 class="font-bold text-sm text-slate-700 mb-1">${m.title}</h4>
+                            <div class="text-sm text-slate-600 markdown-content break-words">${marked.parse(m.content)}</div>
+                        </div>`;
                     modContainer.appendChild(div);
                 });
             }
