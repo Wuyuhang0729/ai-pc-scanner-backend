@@ -53,7 +53,7 @@
             will-change: background;
         }
 
-        /* [质感纹理] */
+        /* [质感纹理] - 极淡噪点，增加背景深度 */
         body::before {
             content: "";
             position: fixed;
@@ -81,10 +81,13 @@
             /* 增加模糊度，体现玻璃质感 */
             position: relative;
             overflow: hidden;
-            transition: transform 0.4s var(--ease-out-quart),
-                box-shadow 0.4s var(--ease-out-quart),
+            transition: box-shadow 0.4s var(--ease-out-quart),
                 background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
+
+            /* [核心] 3D 悬浮交互准备 */
+            transform-style: preserve-3d;
+            will-change: transform;
         }
 
         /* 移除卡片内部的光效伪元素，保持卡片纯净 */
@@ -227,7 +230,6 @@
         }
 
         /* ================= Markdown 排版增强 (解决格式不稳定问题) ================= */
-        /* 强制覆盖所有 Markdown 生成内容的样式，确保层级分明 */
 
         .markdown-content {
             line-height: 1.8;
@@ -829,8 +831,6 @@ CPU: Intel Core Ultra 5 245KF
                 '--s-info-bg': '#f8fafc', '--s-info-text': '#334155', '--s-info-border': '#e2e8f0',
                 '--s-bonus-bg': '#e0e7ff', '--s-bonus-text': '#3730a3', '--s-bonus-border': '#c7d2fe',
                 // [优化] 白天光源颜色加深一倍，增强对比度
-                // 原: rgba(100, 180, 255, 1) -> 
-                // 新: rgba(50, 140, 230, 1)
                 '--c-light-spot': 'rgba(50, 140, 230, 1)'
             },
             dark: {
@@ -858,6 +858,21 @@ CPU: Intel Core Ultra 5 245KF
                 '--c-light-spot': 'rgba(255, 255, 255, 1)'
             }
         };
+
+        // [新增] 光源配置对象，避免在动画循环中重复判断
+        const LightConfig = {
+            get() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    // 白天 (light): 基础 0.15 +/- 0.05 (Max 20%)
+                    // 夜晚 (dark): 基础 0.08 +/- 0.02 (Max 10%)
+                    baseOpacity: isDark ? 0.08 : 0.15,
+                    opacityVariation: isDark ? 0.02 : 0.05,
+                    lightColor: getComputedStyle(document.documentElement).getPropertyValue('--c-light-spot').trim(),
+                };
+            }
+        };
+
 
         function generateThemeStyles() {
             let styleContent = `
@@ -967,6 +982,7 @@ CPU: Intel Core Ultra 5 245KF
         window.addEventListener('load', function () {
             // [核心] 重新设计的环境光交互 (Ambient Light Logic)
             const lightEl = document.getElementById('ambient-light');
+            const cards = document.querySelectorAll('.interactive-card');
 
             // 鼠标位置 (带平滑滞后)
             const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -974,6 +990,7 @@ CPU: Intel Core Ultra 5 245KF
 
             // 物理配置：滞后系数
             const lerpFactor = 0.05;
+            const parallaxScale = 0.005; // 3D 倾斜强度
 
             document.addEventListener('mousemove', e => {
                 target.x = e.clientX;
@@ -991,37 +1008,29 @@ CPU: Intel Core Ultra 5 245KF
                 cursor.y += (target.y - cursor.y) * lerpFactor;
 
                 // 2. 摇曳感 (Swaying) - 叠加多个正弦波
-                // 增加摇曳幅度，让运动感更明显
                 const swayX = Math.sin(time * 0.5) * 80 + Math.sin(time * 1.2) * 30;
                 const swayY = Math.cos(time * 0.4) * 80 + Math.cos(time * 1.5) * 30;
 
                 // 3. 呼吸感 (Breathing) - 尺寸大幅波动
-                // 增加基础尺寸，覆盖更大面积
                 const breathe = Math.sin(time * 0.8) * 150;
                 const size = 900 + breathe;
 
                 // --- 4. 透明度闪烁 (Flicker) - 动态配置 ---
-                const isDark = document.documentElement.classList.contains('dark');
-
-                // 动态亮度配置
-                const baseOpacity = isDark ? 0.08 : 0.15;
-                const opacityVariation = isDark ? 0.02 : 0.05;
+                const lightConfig = LightConfig.get();
 
                 // 调低闪烁频率 (~1/3)，使闪烁间隔更长
                 const flickerFreq1 = 0.8;
                 const flickerFreq2 = 0.3;
 
                 const opacityWave = Math.sin(time * flickerFreq1) + Math.cos(time * flickerFreq2);
-                const opacity = baseOpacity + (opacityWave * opacityVariation);
+                const opacity = lightConfig.baseOpacity + (opacityWave * lightConfig.opacityVariation);
 
                 // 最终坐标
                 const finalX = cursor.x + swayX;
                 const finalY = cursor.y + swayY;
 
-                // 应用样式
-                const color = getComputedStyle(document.documentElement).getPropertyValue('--c-light-spot').trim();
-
-                const colorMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                // 应用环境光样式
+                const colorMatch = lightConfig.lightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
                 const rgb = colorMatch ? `${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]}` : '255, 255, 255';
 
                 lightEl.style.background = `radial-gradient(
@@ -1030,6 +1039,32 @@ CPU: Intel Core Ultra 5 245KF
                     rgba(${rgb}, ${opacity * 0.4}) 40%,
                     rgba(${rgb}, 0) 70%
                 )`;
+
+                // ------------------------------------------
+                // [新增] 5. 卡片 3D 深度摇摆 (Depth Parallax)
+                // ------------------------------------------
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+
+                // 计算鼠标相对于屏幕中心的位置 (-1.0 to 1.0)
+                const normX = (cursor.x - centerX) / centerX;
+                const normY = (cursor.y - centerY) / centerY;
+
+                // 计算倾斜角度 (反向)
+                const rotateY = -normX * parallaxScale * 100;
+                const rotateX = normY * parallaxScale * 100;
+
+                cards.forEach(card => {
+                    // 只有在 resultArea 显示时才应用 3D 倾斜
+                    if (!card.closest('#resultArea') && card.id !== 'inputCard') return;
+
+                    // 应用 3D 转换
+                    card.style.transform = `
+                        perspective(1000px) 
+                        rotateX(${rotateX}deg) 
+                        rotateY(${rotateY}deg) 
+                        translateY(0)`;
+                });
 
                 requestAnimationFrame(animateLight);
             }
