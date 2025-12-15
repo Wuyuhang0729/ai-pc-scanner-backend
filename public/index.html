@@ -13,6 +13,9 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- 核心改动：引入外部数据文件 -->
+    <script src="hardware_data.js"></script>
+
     <style>
         body {
             font-family: 'Noto Sans SC', sans-serif;
@@ -76,34 +79,9 @@
                     <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 font-normal">Database
                         2025</span></h1>
             </div>
-            <!-- 设置按钮主要用于调试，生产环境可以隐藏或保留用于修改后端地址 -->
-            <button onclick="toggleSettings()"
-                class="text-slate-500 hover:text-blue-600 text-sm flex items-center gap-1 transition-colors"><i
-                    class="fa-solid fa-gear"></i> 设置</button>
+            <!-- API 设置已移除，完全由后端托管 -->
         </div>
     </nav>
-
-    <!-- 设置弹窗 -->
-    <div id="settingsModal"
-        class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl">
-            <h3 class="text-xl font-bold text-slate-800 mb-4">服务器配置</h3>
-            <div class="mb-4 text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
-                <i class="fa-solid fa-info-circle"></i> 如果您已部署到 Render，此处通常无需修改。
-            </div>
-            <label class="block text-slate-700 text-xs font-bold mb-1">后端 API 地址</label>
-            <input type="text" id="apiBaseUrl"
-                class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800 mb-3 text-sm placeholder-slate-400"
-                placeholder="例如: https://your-app.onrender.com">
-            <p class="text-xs text-slate-400 mb-4">*留空则默认使用当前页面的相对路径 /api/analyze</p>
-
-            <div class="flex justify-end gap-2">
-                <button onclick="toggleSettings()" class="px-4 py-2 text-slate-500 text-sm">关闭</button>
-                <button onclick="saveSettings()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">保存</button>
-            </div>
-        </div>
-    </div>
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div class="text-center mb-8 mt-4">
@@ -112,7 +90,6 @@
             <p class="text-slate-500 text-sm">内置 2025 最新硬件数据库 · 深度分析 · 拒绝幻觉</p>
         </div>
 
-        <!-- 输入区域 -->
         <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-all duration-300">
             <div class="scan-line" id="scanLine"></div>
             <textarea id="configInput"
@@ -124,7 +101,6 @@ CPU: Intel Core Ultra 5 245KF
 内存: 32G DDR5
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
-            <!-- 识别结果展示栏 -->
             <div id="detectedHardwareBar"
                 class="hidden px-6 py-3 bg-blue-50 border-t border-blue-100 text-xs text-blue-800 flex flex-col gap-2">
                 <div class="flex items-center gap-2 font-bold text-blue-600 uppercase tracking-wider">
@@ -135,7 +111,7 @@ CPU: Intel Core Ultra 5 245KF
 
             <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
                 <div class="text-xs text-slate-400 flex gap-2">
-                    <span id="dbStatus"><i class="fa-solid fa-database"></i> 2025 数据库已就绪</span>
+                    <span id="dbStatus"><i class="fa-solid fa-spinner fa-spin"></i> 数据加载中...</span>
                 </div>
                 <button onclick="startAnalysis()" id="scanBtn"
                     class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2">
@@ -144,22 +120,16 @@ CPU: Intel Core Ultra 5 245KF
             </div>
         </div>
 
-        <!-- 错误提示区域 -->
-        <div id="errorArea" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
-            role="alert">
-            <strong class="font-bold">连接失败！</strong>
+        <div id="errorArea" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            <strong class="font-bold">分析失败！</strong>
             <span class="block sm:inline" id="errorText"></span>
             <span class="absolute top-0 bottom-0 right-0 px-4 py-3"
-                onclick="document.getElementById('errorArea').classList.add('hidden')">
-                <i class="fa-solid fa-times cursor-pointer"></i>
-            </span>
+                onclick="document.getElementById('errorArea').classList.add('hidden')"><i
+                    class="fa-solid fa-times cursor-pointer"></i></span>
         </div>
 
-        <!-- 结果区域 -->
         <div id="resultArea" class="hidden mt-8 transition-opacity duration-500 opacity-0">
-            <!-- 仪表盘 -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <!-- 综合评分 -->
                 <div
                     class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
@@ -168,35 +138,25 @@ CPU: Intel Core Ultra 5 245KF
                         <div class="text-6xl font-black text-slate-800 tracking-tighter mb-1" id="scoreDisplay">--</div>
                         <div id="prefTag"
                             class="hidden absolute -top-2 -right-12 bg-pink-100 text-pink-600 text-[10px] font-bold px-2 py-0.5 rounded-full transform rotate-12 border border-pink-200">
-                            <i class="fa-solid fa-heart"></i> 偏好加成
-                        </div>
+                            <i class="fa-solid fa-heart"></i> 偏好加成</div>
                     </div>
                     <div id="verdictBadge"
                         class="px-4 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 mt-2">分析中</div>
                 </div>
 
-                <!-- 雷达图 -->
                 <div
                     class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col items-center justify-center col-span-2">
-                    <div class="w-full h-48 flex items-center justify-center">
-                        <canvas id="radarChart"></canvas>
-                    </div>
+                    <div class="w-full h-48 flex items-center justify-center"><canvas id="radarChart"></canvas></div>
                 </div>
             </div>
-
-            <!-- 详细报告 -->
             <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6 relative">
                 <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-2xl"></div>
-                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
-                    <i class="fa-solid fa-clipboard-check text-blue-600"></i> 诊断报告
-                </h3>
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg"><i
+                        class="fa-solid fa-clipboard-check text-blue-600"></i> 诊断报告</h3>
                 <div id="aiSummary"
                     class="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed markdown-content"></div>
-
                 <div id="aiModulesContainer" class="space-y-3 mt-6"></div>
             </div>
-
-            <!-- 底部声明 -->
             <div class="text-center">
                 <p class="text-xs text-slate-400">评分依据：本地权威数据库 (2025 Hardware DB) + DeepSeek 深度推理</p>
             </div>
@@ -204,98 +164,28 @@ CPU: Intel Core Ultra 5 245KF
     </main>
 
     <script>
-        // ==========================================
-        // 1. 硬件数据库 (HARDWARE_DB) - 全面提炼
-        // ==========================================
-        const HARDWARE_DB = {
-            // --- GPU (Data extracted from datatable 1 & 2) ---
-            "rtx 6000 blackwell": { name: "RTX PRO 6000 Blackwell", score: 42223, price: "N/A", type: "GPU" },
-            "5090 d": { name: "GeForce RTX 5090 D", score: 40831, price: "N/A", type: "GPU" },
-            "5090": { name: "GeForce RTX 5090", score: 38837, price: 2999.99, type: "GPU" },
-            "4090": { name: "GeForce RTX 4090", score: 38113, price: 2352.33, type: "GPU" },
-            "5080": { name: "GeForce RTX 5080", score: 35875, price: 1199.99, type: "GPU" },
-            "5060 ti": { name: "GeForce RTX 5060 Ti 8GB", score: 22631, price: 332.99, type: "GPU" },
-            "5060": { name: "GeForce RTX 5060", score: 20844, price: 285.99, type: "GPU" },
-            "9060": { name: "Radeon RX 9060 XT 8GB", score: 19863, price: 289.99, type: "GPU" },
-            "4060": { name: "GeForce RTX 4060", score: 19545, price: 299.99, type: "GPU" },
-            "5050": { name: "GeForce RTX 5050", score: 17154, price: 249.99, type: "GPU" },
-            "7600": { name: "Radeon RX 7600", score: 16594, price: 259.99, type: "GPU" },
-            "6700 xt": { name: "Radeon RX 6700 XT", score: 2200, price: 210.92, type: "GPU" },
-            "titan black": { name: "GeForce GTX TITAN Black", score: 9191, price: 1324.33, type: "GPU" },
-
-            // --- CPU (Data extracted from datatable 3, 4, 7) ---
-            "5975wx": { name: "Threadripper PRO 5975WX", score: 75012, price: 1840.00, type: "CPU" },
-            "ultra 7 265k": { name: "Intel Core Ultra 7 265K", score: 58766, price: 292.00, type: "CPU" },
-            "7532": { name: "AMD EPYC 7532", score: 50726, price: 225.00, type: "CPU" },
-            "ultra 5 245kf": { name: "Intel Core Ultra 5 245KF", score: 43391, price: 214.99, type: "CPU" },
-            "5500": { name: "AMD Ryzen 5 5500", score: 19311, price: 74.99, type: "CPU" },
-            "4500": { name: "AMD Ryzen 5 4500", score: 16044, price: 68.14, type: "CPU" },
-            "14100t": { name: "Intel Core i3-14100T", score: 13614, price: 356.25, type: "CPU" },
-            "9900x3d": { name: "AMD Ryzen 9 9900X3D", score: 12441, price: "N/A", type: "CPU" },
-            "9800x3d": { name: "AMD Ryzen 7 9800X3D", score: 12125, price: "N/A", type: "CPU" },
-            "9950x3d": { name: "AMD Ryzen 9 9950X3D", score: 11254, price: "N/A", type: "CPU" },
-            "7900x3d": { name: "AMD Ryzen 9 7900X3D", score: 10796, price: "N/A", type: "CPU" },
-            "ai 9 hx 375": { name: "AMD Ryzen AI 9 HX 375", score: 3262, price: "N/A", type: "CPU" },
-
-            // --- SSD (Data extracted from datatable 5 & 6) ---
-            "9100 pro": { name: "Samsung 9100 PRO 2TB", score: 86443, price: 219.34, type: "SSD" },
-            "sn850x": { name: "WD BLACK SN850X", score: 51571, price: 289.99, type: "SSD" },
-            "sn7100": { name: "WD BLACK SN7100", score: 51667, price: 270.45, type: "SSD" },
-            "p3": { name: "Crucial P3 1TB", score: 22363, price: 119.90, type: "SSD" },
-            "sa400": { name: "Kingston SA400", score: 2908, price: "N/A", type: "SSD" },
-            "bx500": { name: "CT240BX500SSD1", score: 2765, price: 40.99, type: "SSD" }
+        // 初始化检查：确保外部数据文件已加载
+        window.onload = function () {
+            if (typeof HARDWARE_DB === 'undefined') {
+                console.error("Critical: hardware_data.js failed to load!");
+                document.getElementById('dbStatus').innerHTML = '<span class="text-red-500"><i class="fa-solid fa-exclamation-circle"></i> 数据加载失败</span>';
+            } else {
+                console.log("Hardware Database loaded successfully.");
+                document.getElementById('dbStatus').innerHTML = '<i class="fa-solid fa-database text-blue-500"></i> 2025 数据库已就绪';
+            }
         };
 
-        // 别名映射
-        const ALIAS_MAP = {
-            "ultra 5": "ultra 5 245kf",
-            "ultra 7": "ultra 7 265k",
-            "rtx4060": "4060",
-            "rtx5060": "5060",
-            "9900x": "9900x3d",
-            "14100": "14100t",
-            "12600": "12600kf",
-            "13600": "13600kf"
-        };
-
-        // ==========================================
-        // 2. 配置与工具函数
-        // ==========================================
-        // 默认后端地址，如果是前端分离部署，这里留空会自动请求相对路径
-        const DEFAULT_CONFIG = { baseUrl: "", apiKey: "" }; // 这里的 apiKey 实际上不再在前端使用，留空即可
+        const DEFAULT_CONFIG = { baseUrl: "", apiKey: "" };
         let radarChart = null;
 
-        function loadConfig() {
-            const stored = localStorage.getItem('ai_config');
-            return stored ? JSON.parse(stored) : DEFAULT_CONFIG;
-        }
-
-        function toggleSettings() {
-            const modal = document.getElementById('settingsModal');
-            const cfg = loadConfig();
-            document.getElementById('apiBaseUrl').value = cfg.baseUrl;
-            modal.classList.toggle('hidden');
-        }
-
-        function saveSettings() {
-            const config = {
-                baseUrl: document.getElementById('apiBaseUrl').value,
-                apiKey: "" // 前端不需要存 Key
-            };
-            localStorage.setItem('ai_config', JSON.stringify(config));
-            toggleSettings();
-        }
-
-        // ==========================================
-        // 3. 核心逻辑：智能匹配与上下文注入
-        // ==========================================
-
         function extractHardwareContext(text) {
+            // 防御性编程：如果 DB 没加载，防止报错
+            if (typeof HARDWARE_DB === 'undefined') return [];
+
             let lowerText = text.toLowerCase().replace(/\s+/g, ' ');
             let matches = [];
             let matchedKeys = new Set();
 
-            // 1. 别名匹配
             for (const [alias, realKey] of Object.entries(ALIAS_MAP)) {
                 if (lowerText.includes(alias)) {
                     if (!matchedKeys.has(realKey)) {
@@ -308,14 +198,10 @@ CPU: Intel Core Ultra 5 245KF
                 }
             }
 
-            // 2. 精确/模糊匹配 (最长优先)
             const sortedKeys = Object.keys(HARDWARE_DB).sort((a, b) => b.length - a.length);
-
             sortedKeys.forEach(key => {
                 if (lowerText.includes(key) && !matchedKeys.has(key)) {
-                    // 防止 "5060" 匹配到 "5060 ti" 的子串
                     const isAlreadyCovered = Array.from(matchedKeys).some(k => k.includes(key) && k !== key);
-
                     if (!isAlreadyCovered) {
                         const item = HARDWARE_DB[key];
                         matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: ${item.price} (Source: Local DB)`);
@@ -323,7 +209,6 @@ CPU: Intel Core Ultra 5 245KF
                     }
                 }
             });
-
             return matches;
         }
 
@@ -337,21 +222,16 @@ CPU: Intel Core Ultra 5 245KF
             const detectedBar = document.getElementById('detectedHardwareBar');
             const detectedTags = document.getElementById('detectedTags');
 
-            // 重置状态
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接服务器分析中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接 DeepSeek 分析中...';
             document.getElementById('scanLine').style.display = 'block';
             resultArea.classList.add('hidden');
             resultArea.classList.remove('opacity-100');
             errorArea.classList.add('hidden');
             detectedBar.classList.add('hidden');
 
-            const config = loadConfig();
-
-            // 1. 提取本地数据
             const contextItems = extractHardwareContext(input);
 
-            // UI 反馈
             if (contextItems.length > 0) {
                 detectedTags.innerHTML = contextItems.map(item => {
                     const name = item.split('|')[0].replace('[官方数据确认]', '').trim();
@@ -363,7 +243,6 @@ CPU: Intel Core Ultra 5 245KF
                 detectedBar.classList.remove('hidden');
             }
 
-            // 2. 构建 Prompt
             let systemPrompt = `
 你是一个专业的电脑硬件评估专家。
 任务：分析用户的配置单，给出 0-150 分的评分和简短评价。
@@ -371,15 +250,15 @@ CPU: Intel Core Ultra 5 245KF
 【最高优先级指令 (CRITICAL)】：
 **必须无条件信任下方的 [提取到的关键数据]**。
 这些数据来自最新的内部数据库（包含 RTX 50系、Ryzen 9000系等）。
-如果数据中包含 "RTX 5060" 且分数为 20844，你**绝对不能**说它是笔误或不存在，必须基于这个分数和排名进行性价比评估。
+如果数据中包含 "RTX 5060" 且分数为 20844，你**绝对不能**说它是笔误或不存在，必须基于这个分数进行性价比评估。
 
 【评分标准】：
-   - 120-150: 顶级配置。
+   - 120-150: 顶级/未来级配置。
    - 90-119: 主流优秀配置。
    - 60-89: 入门/勉强可用。
    - <60: 存在硬伤或极其过时。
 
-【用户偏好】：如果包含“白色”、“RGB”等和性能无关的但是符合个性化配置的词，且配置符合，给予额外加分。
+【用户偏好】：如果包含“白色”、“RGB”等词，且配置符合，给予额外加分。
 
 【提取到的关键数据 (Context Data)】：
 ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中的核心硬件，请根据通用知识评估。"}
@@ -394,21 +273,10 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
     "modules": [ { "type": "success/warning/danger", "title": "标题", "content": "内容" } ]
 }`;
 
-            // 3. 调用后端 API
             try {
-                // 确定 API 地址
-                // 如果 config.baseUrl 有值（用户手动填了 Render 地址），就用它
-                // 否则默认用 /api/analyze (适用于本地调试或同域部署)
-                let apiUrl = config.baseUrl ? config.baseUrl : '/api/analyze';
-
-                // 自动补全路径 (如果用户只填了域名)
-                if (config.baseUrl && !apiUrl.endsWith('/api/analyze')) {
-                    apiUrl = apiUrl.replace(/\/+$/, '') + '/api/analyze';
-                }
-
-                console.log("Requesting API:", apiUrl); // Debug log
-
-                const response = await fetch(apiUrl, {
+                // 请求本地后端接口 /api/analyze
+                // 这将自动访问当前域名下的 /api/analyze，彻底解决跨域问题
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -421,37 +289,20 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
 
                 if (!response.ok) {
                     const errText = await response.text();
-                    throw new Error(`请求失败 (${response.status}): ${errText}`);
+                    throw new Error(`API 请求失败 (${response.status}): ${errText}`);
                 }
 
                 const data = await response.json();
-
-                // 解析返回内容 (兼容不同的 API 响应结构)
-                let contentStr = "";
-                if (data.choices && data.choices.length > 0) {
-                    contentStr = data.choices[0].message.content;
-                } else if (data.message && data.message.content) {
-                    contentStr = data.message.content;
-                } else {
-                    contentStr = JSON.stringify(data); // 兜底
-                }
-
+                const contentStr = data.choices[0].message.content;
                 const jsonStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
                 renderUI(JSON.parse(jsonStr));
 
             } catch (error) {
                 console.error("API Error:", error);
                 let msg = error.message;
-
-                // 针对 CORS 或网络错误的友好提示
                 if (error.name === 'TypeError' && msg.includes('Failed to fetch')) {
-                    msg = `<strong>无法连接到服务器 (${config.baseUrl || '本地后端'})</strong><br><br>
-                           可能原因：<br>
-                           1. <strong>跨域限制 (CORS)</strong>：如果您在本地直接打开 HTML (file://)，浏览器会拦截请求。请确保您是通过 http://localhost:3000 访问，或将前端也部署到 Render。<br>
-                           2. <strong>地址错误</strong>：请检查设置中的“后端 API 地址”是否正确 (例如: https://my-app.onrender.com)。<br>
-                           3. <strong>服务器未启动</strong>：Render 免费版可能会休眠，请稍等 1 分钟再试。`;
+                    msg = "网络请求失败。<br>可能原因：<br>1. 浏览器跨域限制 (CORS)：DeepSeek API 官方不支持浏览器直连，请使用支持跨域的 API 代理。<br>2. 网络连接不通。<br>3. API 地址填写错误。<br><br>建议检查 API 配置或网络环境。";
                 }
-
                 document.getElementById('errorText').innerHTML = msg;
                 errorArea.classList.remove('hidden');
             } finally {
@@ -461,9 +312,6 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
             }
         }
 
-        // ==========================================
-        // 4. UI 渲染
-        // ==========================================
         function renderUI(data) {
             const area = document.getElementById('resultArea');
             area.classList.remove('hidden');
@@ -476,7 +324,6 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
             let badgeColor = data.score >= 120 ? "bg-emerald-100 text-emerald-700" : (data.score >= 90 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700");
 
             badgeEl.innerText = data.verdict;
-
             scoreEl.className = `text-6xl font-black tracking-tighter mb-1 ${color}`;
             scoreEl.innerText = data.score;
             badgeEl.className = `px-4 py-1 rounded-full text-xs font-bold mt-2 ${badgeColor}`;
