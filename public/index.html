@@ -60,7 +60,6 @@
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
-            /* 增加 backdrop-filter 模拟毛玻璃/厚纸张 */
             backdrop-filter: blur(8px);
             transition: transform 0.4s var(--ease-out-quart),
                 box-shadow 0.4s var(--ease-out-quart),
@@ -91,11 +90,9 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 1rem;
             line-height: 1.6;
-            /* 保持较好的行距 */
             resize: none;
             outline: none;
             height: 15rem;
-            /* 保持 1.5 倍高度 */
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
@@ -182,7 +179,6 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* Markdown 样式 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 700;
@@ -217,7 +213,6 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 光标动画 */
         .cursor-blink {
             display: inline-block;
             width: 3px;
@@ -277,6 +272,51 @@
             transition: background-image var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* 评分规则 Tooltip 样式 */
+        .rules-popover {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--c-card-bg);
+            border: 1px solid var(--c-border);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-hover);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s var(--ease-out-quart);
+            margin-top: 0.5rem;
+        }
+
+        .rules-trigger:hover+.rules-popover,
+        .rules-popover:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .rule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            padding: 0.25rem 0;
+            color: var(--c-text-mute);
+            border-bottom: 1px dashed var(--c-border);
+        }
+
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+
+        .rule-score {
+            font-weight: 700;
+            color: var(--c-text-head);
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -299,17 +339,13 @@
         @keyframes popUp {
             0% {
                 opacity: 0;
-                transform: scale(0.9) translateY(40px);
-                /* 加大位移 */
-                filter: blur(10px);
-                /* 光学模糊 */
+                transform: scale(0.95) translateY(20px);
                 visibility: visible;
             }
 
             100% {
                 opacity: 1;
                 transform: scale(1) translateY(0);
-                filter: blur(0);
                 visibility: visible;
             }
         }
@@ -423,13 +459,13 @@
     <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative z-10">
         <div class="text-center mb-10 mt-6 animate-slide-up">
             <h2 class="text-3xl md:text-5xl font-black mb-4 ui-heading tracking-tight leading-tight">
-                把配置单发给我<br>
+                输入配置设备<br>
                 <span style="color: var(--c-primary); transition: color 0.4s var(--ease-out-quart);">
                     深度评估硬件实力
                 </span>
             </h2>
             <p class="ui-text-mute text-sm md:text-base max-w-2xl mx-auto">
-                基于 2025 权威硬件数据库 · 区分客观性能与个人偏好
+                基于 2025 权威硬件数据库 · AI 驱动深度分析 · 专业诊断报告
             </p>
         </div>
 
@@ -480,10 +516,35 @@ CPU: Intel Core Ultra 5 245KF
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- 1. 总分卡片 -->
                 <div id="card-score"
-                    class="lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
+                    class="lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window"
+                    style="overflow: visible;">
                     <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
+                        <div class="flex justify-between items-start mb-4 relative">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
+                                <!-- [新增] 评分规则触发器 -->
+                                <div class="relative group">
+                                    <i
+                                        class="fa-regular fa-circle-question text-xs ui-text-mute cursor-help rules-trigger hover:text-blue-500 transition-colors"></i>
+                                    <!-- [新增] 评分规则悬浮面板 -->
+                                    <div class="rules-popover">
+                                        <div
+                                            class="text-[10px] font-bold ui-heading mb-2 border-b border-dashed border-gray-200 pb-1">
+                                            评分标准 (基准分: 100)</div>
+                                        <div class="rule-item"><span>入门/办公</span><span
+                                                class="rule-score text-gray-400">0 - 60</span></div>
+                                        <div class="rule-item"><span>主流中端</span><span
+                                                class="rule-score text-blue-500">60 - 90</span></div>
+                                        <div class="rule-item"><span>高端/甜点</span><span
+                                                class="rule-score text-emerald-500">90 - 120</span></div>
+                                        <div class="rule-item"><span>旗舰/幻想</span><span
+                                                class="rule-score text-purple-500">120 +</span></div>
+                                        <div class="mt-2 text-[9px] ui-text-mute leading-tight opacity-70">
+                                            * 总分包含硬实力(0-150)与偏好加成(0-10)，超过100分即代表超越主流平均水平。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="verdictBadge"
                                 class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 ui-text-mute transition-colors">
                                 --</div>
@@ -491,7 +552,8 @@ CPU: Intel Core Ultra 5 245KF
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
                             <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
-                            <span class="text-lg ui-text-mute font-medium">/ 150</span>
+                            <!-- [修改] 分母改为 100，创造“爆表”感 -->
+                            <span class="text-lg ui-text-mute font-medium">/ 100</span>
                         </div>
 
                         <div id="prefContainer" class="hidden mb-6"></div>
@@ -725,7 +787,8 @@ CPU: Intel Core Ultra 5 245KF
                     options: {
                         scales: {
                             r: {
-                                suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
+                                // [修改] 刻度 Max 调整为 100，让高分配置溢出图表，视觉冲击更强
+                                suggestedMin: 0, suggestedMax: 100, ticks: { display: false },
                                 grid: { color: hexToRgba(mute, 0.1) },
                                 angleLines: { color: hexToRgba(mute, 0.1) },
                                 pointLabels: {
@@ -931,11 +994,12 @@ CPU: Intel Core Ultra 5 245KF
                 prefContainer.classList.add('hidden');
             }
 
+            // [修改] 进度条分母调整为 100，让高分配置“爆表”
             const setBar = (id, score) => {
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
-                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600);
+                setTimeout(() => { el.style.width = `${Math.min((score / 100) * 100, 100)}%`; }, 600);
             };
             setBar('bar-perf', data.sub_scores.performance);
             setBar('bar-val', data.sub_scores.value);
