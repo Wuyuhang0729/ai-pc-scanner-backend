@@ -17,102 +17,96 @@
     <script src="hardware_data.js" defer></script>
 
     <style>
-        /* ================= [核心] CSS 变量定义系统 ================= */
+        /* ================= [核心] CSS 变量定义系统 (语义化) ================= */
         :root {
-            /* 白天模式颜色定义 (Slate 风格) */
+            /* 白天模式 (Slate 风格) */
             --bg-page: #f8fafc;
             /* slate-50 */
             --bg-card: #ffffff;
             /* white */
-            --bg-input: #ffffff;
-            /* white */
-            --bg-nav: rgba(255, 255, 255, 0.8);
+            --bg-nav: rgba(255, 255, 255, 0.85);
 
-            --text-primary: #334155;
+            --text-main: #334155;
             /* slate-700 */
             --text-heading: #1e293b;
             /* slate-800 */
             --text-muted: #94a3b8;
             /* slate-400 */
-            --text-input: #334155;
-            /* slate-700 */
+            --text-highlight: #2563eb;
+            /* blue-600 */
 
             --border-color: #e2e8f0;
             /* slate-200 */
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
 
-            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --scan-line-color: rgba(59, 130, 246, 1);
+            /* 阴影与特效 */
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            --scan-line-color: rgba(59, 130, 246, 0.8);
 
-            /* 特殊颜色 */
-            --toggle-bg: #f1f5f9;
-            /* slate-100 */
-            --toggle-icon: #64748b;
-            /* slate-500 */
-            --module-bg: #ffffff;
+            /* 功能色 */
+            --tag-bg: #f1f5f9;
+            --tag-text: #64748b;
         }
 
-        /* 黑夜模式颜色定义 (自动覆盖上述变量) */
+        /* 黑夜模式 (深邃蓝灰风格) */
         html.dark {
             --bg-page: #0f172a;
             /* slate-900 */
             --bg-card: #1e293b;
             /* slate-800 */
-            --bg-input: #1e293b;
-            /* slate-800 */
-            --bg-nav: rgba(30, 41, 59, 0.8);
-            /* slate-800/80 */
+            --bg-nav: rgba(15, 23, 42, 0.85);
 
-            --text-primary: #cbd5e1;
+            --text-main: #cbd5e1;
             /* slate-300 */
-            --text-heading: #ffffff;
-            /* white */
+            --text-heading: #f8fafc;
+            /* slate-50 */
             --text-muted: #64748b;
             /* slate-500 */
-            --text-input: #e2e8f0;
-            /* slate-200 */
+            --text-highlight: #60a5fa;
+            /* blue-400 */
 
             --border-color: #334155;
             /* slate-700 */
+            --input-bg: #1e293b;
+            --input-border: #475569;
 
-            /* [增强] 黑夜模式专用深邃阴影 */
-            --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.9);
-            --scan-line-color: rgba(96, 165, 250, 1);
+            /* 黑夜模式增强阴影，解决“不匹配”问题 */
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            --scan-line-color: rgba(96, 165, 250, 0.8);
 
-            --toggle-bg: #334155;
-            /* slate-700 */
-            --toggle-icon: #facc15;
-            /* yellow-400 */
-            --module-bg: #1e293b;
-            /* slate-800 */
+            --tag-bg: #334155;
+            --tag-text: #94a3b8;
         }
 
-        /* ================= 通用样式类 (应用变量) ================= */
+        /* ================= 基础重置与过渡 ================= */
         body {
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--bg-page);
-            color: var(--text-primary);
-            /* 关键：颜色过渡效果 */
+            color: var(--text-main);
+            /* 统一过渡，防止切换时颜色闪烁或不匹配 */
             transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 0.3s ease;
         }
 
-        /* 语义化组件类 - 替代 Tailwind 的颜色 utility */
+        /* ================= 语义化组件类 (强制覆盖 Tailwind) ================= */
         .theme-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow-card);
-            transition: all 0.3s ease;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .theme-card-float {
+            box-shadow: var(--shadow-float);
         }
 
         .theme-nav {
             background-color: var(--bg-nav);
             border-bottom: 1px solid var(--border-color);
-        }
-
-        .theme-input {
-            background-color: var(--bg-input);
-            color: var(--text-input);
         }
 
         .theme-heading {
@@ -123,21 +117,39 @@
             color: var(--text-muted);
         }
 
-        .theme-toggle-btn {
-            background-color: var(--toggle-bg);
-            color: var(--toggle-icon);
+        .theme-text-highlight {
+            color: var(--text-highlight);
+        }
+
+        .theme-input {
+            background-color: var(--input-bg);
+            border: 1px solid transparent;
+            /* 默认无边框，focus时显示 */
+            color: var(--text-main);
+            transition: all 0.3s;
+        }
+
+        .theme-input:focus {
+            border-color: var(--text-highlight);
+            outline: none;
+        }
+
+        .theme-tag {
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
             border: 1px solid var(--border-color);
         }
 
-        .theme-module {
-            background-color: var(--module-bg);
-            border-color: var(--border-color);
+        .theme-toggle-btn {
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
+            border: 1px solid var(--border-color);
         }
 
-        /* 动画与其他 */
+        /* 动画 */
         .scan-line {
             width: 100%;
-            height: 3px;
+            height: 2px;
             background: linear-gradient(90deg, transparent 0%, var(--scan-line-color) 50%, transparent 100%);
             position: absolute;
             top: 0;
@@ -174,26 +186,32 @@
             width: 0%;
         }
 
-        /* Markdown 样式适配 */
+        /* Markdown */
         .markdown-content strong {
-            color: #2563eb;
-        }
-
-        html.dark .markdown-content strong {
-            color: #60a5fa;
+            color: var(--text-highlight);
         }
 
         .markdown-content p {
-            margin-bottom: 0.75em;
+            margin-bottom: 0.8em;
+            line-height: 1.7;
         }
 
         .markdown-content ul {
             list-style-type: disc;
             padding-left: 1.2em;
+            margin-bottom: 0.8em;
         }
 
+        .markdown-content h3 {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-top: 1em;
+            color: var(--text-heading);
+        }
+
+        /* 滚动条 */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -201,46 +219,35 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+            background: var(--border-color);
+            border-radius: 3px;
         }
 
-        html.dark ::-webkit-scrollbar-thumb {
-            background: #475569;
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
 
         .summary-window {
-            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 40%);
+            background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.03), transparent 50%);
         }
     </style>
 
-    <!-- 主题初始化 (内联脚本，最快速度执行) -->
     <script>
+        // 内联初始化：防止FOUC
         (function () {
             try {
-                // 1. 读取本地存储
-                const storedTheme = localStorage.getItem('theme');
-                // 2. 读取系统偏好
+                const stored = localStorage.getItem('theme');
                 const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const h = new Date().getHours();
 
-                let mode = 'light';
-                if (storedTheme) {
-                    mode = storedTheme;
-                } else if (sysDark) {
-                    mode = 'dark';
-                } else {
-                    // 3. 时间兜底 (晚6 - 早6)
-                    const h = new Date().getHours();
-                    if (h >= 18 || h < 6) mode = 'dark';
-                }
-
+                let mode = stored ? stored : (sysDark ? 'dark' : (h >= 18 || h < 6 ? 'dark' : 'light'));
                 if (mode === 'dark') document.documentElement.classList.add('dark');
-            } catch (e) { console.error(e); }
+            } catch (e) { }
         })();
     </script>
 </head>
 
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col transition-colors duration-300">
 
     <!-- 导航栏 -->
     <nav class="theme-nav backdrop-blur-md p-4 sticky top-0 z-50 transition-colors duration-300">
@@ -250,23 +257,19 @@
                     <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
                         <i class="fa-solid fa-microchip text-lg"></i>
                     </div>
-                    <!-- 使用 theme-heading 类控制文字颜色 -->
                     <h1 class="text-xl font-bold theme-heading tracking-tight">AI 装机<span
-                            class="text-blue-600 dark:text-blue-400">诊断室</span></h1>
+                            class="theme-text-highlight">诊断室</span></h1>
                 </div>
 
-                <!-- 切换按钮 -->
                 <button id="themeToggleBtn"
-                    class="theme-toggle-btn shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all focus:outline-none shadow-sm ml-2 group"
+                    class="theme-toggle-btn shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors focus:outline-none shadow-sm ml-2 group"
                     aria-label="切换黑夜模式">
-                    <!-- 太阳 (Dark下隐藏) -->
                     <svg class="w-4 h-4 dark:hidden transform group-hover:rotate-45 transition-transform duration-500"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                         </path>
                     </svg>
-                    <!-- 月亮 (Dark下显示) -->
                     <svg class="w-4 h-4 hidden dark:block transform group-hover:-rotate-12 transition-transform duration-500"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -277,8 +280,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <span
-                    class="text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-600 hidden sm:inline-block">
+                <span class="text-xs font-medium theme-tag px-3 py-1 rounded-full hidden sm:inline-block">
                     <i class="fa-solid fa-database mr-1"></i> DB 2025
                 </span>
             </div>
@@ -295,17 +297,16 @@
                 </span>
             </h2>
             <p class="theme-text-muted text-sm md:text-base max-w-2xl mx-auto">
-                基于 2025 权威硬件数据库 · 区分硬实力与个人偏好 · 拒绝模棱两可
+                基于 2025 权威硬件数据库 · 区分客观性能与个人偏好
             </p>
         </div>
 
-        <!-- 输入卡片：使用 theme-card -->
-        <div class="theme-card rounded-2xl overflow-hidden relative group">
+        <!-- 输入区：完全使用 theme-card，移除所有 Tailwind 颜色类 -->
+        <div class="theme-card theme-card-float rounded-2xl overflow-hidden relative group">
             <div class="scan-line" id="scanLine"></div>
 
             <textarea id="configInput"
-                class="w-full h-40 theme-input p-6 focus:outline-none resize-none text-base font-mono transition-colors duration-300 placeholder-slate-400"
-                placeholder="在此粘贴配置单...
+                class="w-full h-40 theme-input p-6 resize-none text-base font-mono placeholder-slate-400" placeholder="在此粘贴配置单...
 例：
 CPU: Intel Core Ultra 5 245KF
 显卡: GeForce RTX 5060
@@ -313,7 +314,8 @@ CPU: Intel Core Ultra 5 245KF
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
             <div id="detectedHardwareBar"
-                class="hidden bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors">
+                class="hidden border-t border-slate-100 dark:border-slate-700 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors"
+                style="background-color: var(--bg-page);">
                 <span class="text-[10px] font-bold theme-text-muted uppercase tracking-wider mr-2">Detected:</span>
                 <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
@@ -346,11 +348,11 @@ CPU: Intel Core Ultra 5 245KF
             </button>
         </div>
 
-        <!-- 结果展示区 -->
         <div id="resultArea" class="hidden mt-10 transition-all duration-700 opacity-0 transform translate-y-4">
 
-            <!-- 评分卡片 -->
+            <!-- 评分卡片区 -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                <!-- 总分卡片 -->
                 <div
                     class="lg:col-span-4 theme-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden">
                     <div
@@ -366,28 +368,35 @@ CPU: Intel Core Ultra 5 245KF
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
+                            <!-- 
+                                分数展示逻辑修改：
+                                总分可能会超过 150 (Base 150 + Bonus 10)，
+                                但分母依然显示 / 150，制造一种“爆表”的感觉。
+                            -->
                             <span class="text-7xl font-black tracking-tighter theme-heading transition-colors"
                                 id="scoreDisplay">--</span>
                             <span class="text-lg theme-text-muted font-medium">/ 150</span>
                         </div>
 
+                        <!-- 偏好分标签：视觉降级，更精致 -->
                         <div id="prefContainer" class="hidden mb-6 rounded-lg transition-all"></div>
 
                         <div
                             class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 text-[10px] theme-text-muted flex gap-4">
-                            <div><span
-                                    class="w-2 h-2 rounded-full bg-slate-800 dark:bg-slate-400 inline-block mr-1"></span>硬实力
-                                (Max 120)</div>
-                            <div><span class="w-2 h-2 rounded-full bg-pink-500 inline-block mr-1"></span>偏好分 (Max 30)
-                            </div>
+                            <div class="flex items-center"><span
+                                    class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block mr-1.5"></span>客观性能 (Max
+                                150)</div>
+                            <div class="flex items-center"><span
+                                    class="w-1.5 h-1.5 rounded-full bg-pink-400 inline-block mr-1.5"></span>偏好加成 (Max
+                                10)</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 详情 & 雷达图 -->
+                <!-- 维度分析 & 雷达图 -->
                 <div class="lg:col-span-8 theme-card rounded-2xl p-6 flex flex-col md:flex-row gap-8">
                     <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6">
-                        <!-- 性能 -->
+                        <!-- 进度条 Max 调整为 150 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold theme-text-muted"><i
@@ -398,7 +407,6 @@ CPU: Intel Core Ultra 5 245KF
                                 <div id="bar-perf" class="h-full bg-blue-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
-                        <!-- 性价比 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold theme-text-muted"><i
@@ -409,7 +417,6 @@ CPU: Intel Core Ultra 5 245KF
                                 <div id="bar-val" class="h-full bg-emerald-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
-                        <!-- 兼容性 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold theme-text-muted"><i
@@ -420,7 +427,6 @@ CPU: Intel Core Ultra 5 245KF
                                 <div id="bar-comp" class="h-full bg-amber-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
-                        <!-- 品质 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold theme-text-muted"><i
@@ -434,7 +440,7 @@ CPU: Intel Core Ultra 5 245KF
                     </div>
 
                     <div
-                        class="w-full md:w-1/3 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity">
+                        class="w-full md:w-1/3 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
                         <div class="w-32 h-32">
                             <canvas id="radarChart"></canvas>
                         </div>
@@ -442,9 +448,9 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- AI 诊断书 -->
+            <!-- AI 诊断结论书 -->
             <div class="mb-6 relative">
-                <div class="absolute inset-0 bg-blue-600/5 dark:bg-blue-900/20 translate-y-2 rounded-2xl"></div>
+                <div class="absolute inset-0 bg-blue-600/5 dark:bg-blue-900/10 translate-y-2 rounded-2xl"></div>
                 <div
                     class="relative theme-card rounded-2xl p-8 border-2 border-slate-100 dark:border-slate-700 summary-window">
                     <div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
@@ -465,7 +471,7 @@ CPU: Intel Core Ultra 5 245KF
                 </div>
             </div>
 
-            <!-- 详细检查项 -->
+            <!-- 模块化检查结果 -->
             <div>
                 <h3
                     class="text-xs font-bold theme-text-muted uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
@@ -482,7 +488,7 @@ CPU: Intel Core Ultra 5 245KF
     </main>
 
     <script>
-        // ================= ThemeManager (CSS 变量版) =================
+        // ================= ThemeManager (纯净版) =================
         const ThemeManager = {
             observers: [],
             subscribe(fn) { this.observers.push(fn); },
@@ -503,7 +509,7 @@ CPU: Intel Core Ultra 5 245KF
 
         ThemeManager.init();
 
-        // ================= ChartManager (适配 CSS 变量) =================
+        // ================= ChartManager =================
         const ChartManager = {
             chartInstance: null,
             init() { ThemeManager.subscribe((isDark) => this.handleThemeChange(isDark)); },
@@ -522,9 +528,9 @@ CPU: Intel Core Ultra 5 245KF
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderColor: this.getBorderColor(isDark),
                             borderWidth: 2,
-                            pointRadius: 3,
+                            pointRadius: 2,
                             pointBackgroundColor: this.getBorderColor(isDark),
-                            pointBorderColor: '#fff',
+                            pointBorderColor: isDark ? '#1e293b' : '#fff',
                             pointHoverBackgroundColor: '#fff',
                             pointHoverBorderColor: this.getBorderColor(isDark)
                         }]
@@ -532,7 +538,8 @@ CPU: Intel Core Ultra 5 245KF
                     options: {
                         scales: {
                             r: {
-                                suggestedMin: 0, suggestedMax: 120, ticks: { display: false },
+                                // Max 调整为 150
+                                suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
                                 grid: { color: this.getGridColor(isDark) },
                                 angleLines: { color: this.getGridColor(isDark) },
                                 pointLabels: {
@@ -545,7 +552,7 @@ CPU: Intel Core Ultra 5 245KF
                             legend: { display: false },
                             tooltip: {
                                 enabled: true,
-                                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                                 titleColor: isDark ? '#fff' : '#1e293b',
                                 bodyColor: isDark ? '#cbd5e1' : '#475569',
                                 borderColor: isDark ? '#334155' : '#e2e8f0',
@@ -558,19 +565,27 @@ CPU: Intel Core Ultra 5 245KF
             },
             handleThemeChange(isDark) {
                 if (!this.chartInstance) return;
-                // Update Colors
-                this.chartInstance.data.datasets[0].borderColor = this.getBorderColor(isDark);
-                this.chartInstance.data.datasets[0].pointBackgroundColor = this.getBorderColor(isDark);
-                this.chartInstance.data.datasets[0].pointHoverBorderColor = this.getBorderColor(isDark);
-                this.chartInstance.options.scales.r.grid.color = this.getGridColor(isDark);
-                this.chartInstance.options.scales.r.angleLines.color = this.getGridColor(isDark);
+                const color = this.getBorderColor(isDark);
+                const grid = this.getGridColor(isDark);
+
+                this.chartInstance.data.datasets[0].borderColor = color;
+                this.chartInstance.data.datasets[0].pointBackgroundColor = color;
+                this.chartInstance.data.datasets[0].pointHoverBorderColor = color;
+                this.chartInstance.data.datasets[0].pointBorderColor = isDark ? '#1e293b' : '#fff';
+
+                this.chartInstance.options.scales.r.grid.color = grid;
+                this.chartInstance.options.scales.r.angleLines.color = grid;
                 this.chartInstance.options.scales.r.pointLabels.color = isDark ? '#94a3b8' : '#64748b';
-                this.chartInstance.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+
+                this.chartInstance.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
                 this.chartInstance.options.plugins.tooltip.titleColor = isDark ? '#fff' : '#1e293b';
+                this.chartInstance.options.plugins.tooltip.bodyColor = isDark ? '#cbd5e1' : '#475569';
+                this.chartInstance.options.plugins.tooltip.borderColor = isDark ? '#334155' : '#e2e8f0';
+
                 this.chartInstance.update();
             },
-            getBorderColor(isDark) { return isDark ? '#60a5fa' : '#3b82f6'; }, // Blue-400 vs Blue-500
-            getGridColor(isDark) { return isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'; }
+            getBorderColor(isDark) { return isDark ? '#60a5fa' : '#3b82f6'; },
+            getGridColor(isDark) { return isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'; }
         };
         ChartManager.init();
 
@@ -623,7 +638,7 @@ CPU: Intel Core Ultra 5 245KF
             if (contextItems.length > 0) {
                 detectedTags.innerHTML = contextItems.map(item => {
                     const name = item.split('|')[0].replace('[已识别]', '').trim();
-                    return `<span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 rounded text-blue-600 dark:text-blue-300 font-medium text-[10px] truncate max-w-[150px]">${name}</span>`;
+                    return `<span class="px-2 py-0.5 theme-tag rounded text-[10px] font-medium truncate max-w-[150px]">${name}</span>`;
                 }).join('');
                 detectedBar.classList.remove('hidden');
             } else {
@@ -631,11 +646,15 @@ CPU: Intel Core Ultra 5 245KF
                 detectedBar.classList.remove('hidden');
             }
 
+            // [逻辑调整] Base Score 0-150, Bonus 0-10, Total can be 160
             let systemPrompt = `
 你是一个专业的电脑硬件评估专家。
 任务：分析用户的配置单，计算评分并给出评价。
 【最高优先级指令】：必须无条件信任 [Context Data] 中的硬件数据。
-【评分逻辑】：1. Base Score (0-120) 2. Bonus (0-30) 3. Total = Base + Bonus。
+【评分逻辑】：
+1. **基础分 (Base Score, 0-150)**：仅基于硬件客观性能。顶级配置(如5090)可接近150。
+2. **偏好加成 (Bonus, 0-10)**：如果用户有特殊偏好(如纯白海景房)且配置符合，给少量加分。
+3. **总分** = Base + Bonus。
 【输出 JSON】：{ "total_score": number, "base_score": number, "preference_bonus": number, "verdict": "string", "summary": "markdown", "sub_scores": { "performance": number, "value": number, "compatibility": number, "quality": number }, "is_preference_match": boolean, "modules": [ { "type": "success/warning/danger", "title": "string", "content": "string" } ] }
 Context Data: ${contextItems.join('\n')}`;
 
@@ -671,25 +690,32 @@ Context Data: ${contextItems.join('\n')}`;
             const scoreEl = document.getElementById('scoreDisplay');
             const verdictEl = document.getElementById('verdictBadge');
 
-            let scoreColorClass = finalScore >= 120 ? "text-emerald-600 dark:text-emerald-400" : (finalScore >= 90 ? "text-blue-600 dark:text-blue-400" : (finalScore >= 60 ? "text-amber-500 dark:text-amber-400" : "text-red-500 dark:text-red-400"));
-            let badgeClass = finalScore >= 120 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : (finalScore >= 90 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300");
+            // 颜色逻辑微调
+            let scoreColorClass = finalScore >= 140 ? "text-emerald-600 dark:text-emerald-400" : (finalScore >= 110 ? "theme-text-highlight" : (finalScore >= 80 ? "text-amber-500 dark:text-amber-400" : "text-red-500 dark:text-red-400"));
+            let badgeClass = finalScore >= 140 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : (finalScore >= 110 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300");
 
             scoreEl.className = `text-7xl font-black tracking-tighter ${scoreColorClass} transition-colors`;
             scoreEl.innerText = finalScore;
             verdictEl.className = `px-3 py-1 rounded-md text-sm font-bold ml-auto ${badgeClass}`;
             verdictEl.innerText = data.verdict;
 
+            // 偏好标签：视觉降级为精致小标
             const prefContainer = document.getElementById('prefContainer');
             prefContainer.classList.remove('hidden');
             if (data.is_preference_match && data.preference_bonus > 0) {
-                prefContainer.className = "mb-6 bg-pink-50 dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800 rounded-lg p-3 flex items-center gap-3 transition-all";
-                prefContainer.innerHTML = `<div class="bg-pink-100 dark:bg-pink-800/40 text-pink-500 dark:text-pink-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-heart"></i></div><div><div class="text-xs text-pink-400 dark:text-pink-300 font-bold uppercase">偏好 Bonus</div><div class="text-sm font-bold text-pink-600 dark:text-pink-400">颜值/信仰加成 <span class="text-lg ml-1">+${data.preference_bonus}</span></div></div>`;
+                prefContainer.className = "mb-6 flex items-center gap-2 animate-pulse";
+                prefContainer.innerHTML = `
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-900/20 text-pink-500 dark:text-pink-300">
+                        <i class="fa-solid fa-heart mr-1"></i>偏好加成 +${data.preference_bonus}
+                    </span>
+                `;
             } else {
-                prefContainer.className = "mb-6 p-2 flex items-center gap-2 theme-text-muted opacity-60 hover:opacity-100 transition-opacity border border-transparent";
-                prefContainer.innerHTML = `<div class="theme-text-muted text-xs"><i class="fa-regular fa-heart"></i></div><div class="text-[10px] font-medium">未检测到特殊偏好，评分纯基于性能。</div>`;
+                prefContainer.className = "hidden"; // 如果没有加成直接隐藏，保持界面清爽
+                prefContainer.innerHTML = "";
             }
 
-            const setBar = (id, score, max = 120) => {
+            // 进度条 Max = 150
+            const setBar = (id, score, max = 150) => {
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
@@ -706,15 +732,13 @@ Context Data: ${contextItems.join('\n')}`;
             modContainer.innerHTML = '';
             if (data.modules) {
                 data.modules.forEach(m => {
-                    // 使用 theme-module 替代写死的 bg-colors
                     const styles = {
                         success: { icon: 'fa-check', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-l-4 border-l-emerald-500' },
                         warning: { icon: 'fa-triangle-exclamation', color: 'text-amber-500 dark:text-amber-400', border: 'border-l-4 border-l-amber-500' },
                         danger: { icon: 'fa-ban', color: 'text-red-500 dark:text-red-400', border: 'border-l-4 border-l-red-500' }
-                    }[m.type] || { icon: 'fa-info', color: 'text-blue-500 dark:text-blue-400', border: 'border-l-4 border-l-blue-500' };
+                    }[m.type] || { icon: 'fa-info', color: 'theme-text-highlight', border: 'border-l-4 border-l-blue-500' };
 
                     const div = document.createElement('div');
-                    // 注意：这里应用了 theme-module 类
                     div.className = `p-4 rounded-r-lg shadow-sm border-y border-r theme-module ${styles.border} flex gap-3 transition-colors duration-300`;
                     div.innerHTML = `<div class="mt-0.5"><i class="fa-solid ${styles.icon} ${styles.color}"></i></div><div class="min-w-0"><h4 class="font-bold text-sm theme-heading leading-tight mb-2">${m.title}</h4><div class="text-xs theme-text-muted module-content">${marked.parse(m.content)}</div></div>`;
                     modContainer.appendChild(div);
