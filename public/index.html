@@ -6,16 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 装机诊断室 - 硬件配置深度评估</title>
 
-    <!-- 1. DNS 预解析：提前解析 DeepSeek 域名，加快后续请求 -->
     <link rel="dns-prefetch" href="https://api.deepseek.com">
-
-    <!-- 2. 样式表保持在头部加载，防止页面闪烁 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
         rel="stylesheet">
-
-    <!-- 3. 脚本添加 defer 属性：推迟到 HTML 解析完再执行，不阻塞页面显示 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="hardware_data.js" defer></script>
@@ -23,25 +18,20 @@
     <style>
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
+            /* 加深一点背景色，增加卡片对比度 */
             color: #334155;
         }
 
-        /* 优化后的扫描线效果 */
         .scan-line {
             width: 100%;
             height: 3px;
-            /* 稍微加粗一点点，增强可见性 */
-            /* 使用渐变替代纯色，两端透明，中间亮蓝，减少边缘的硬切感 */
             background: linear-gradient(90deg, rgba(59, 130, 246, 0) 0%, rgba(59, 130, 246, 1) 50%, rgba(59, 130, 246, 0) 100%);
             position: absolute;
             top: 0;
             left: 0;
             animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
             display: none;
-            /* 移除过重的 box-shadow 以减少页面重绘导致的微闪 */
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-            /* 性能优化：告诉浏览器这些属性会变化 */
             will-change: top, opacity;
             z-index: 10;
             pointer-events: none;
@@ -55,7 +45,6 @@
 
             15% {
                 opacity: 1;
-                /* 稍微延迟一点完全显示，避免顶部突然出现 */
             }
 
             85% {
@@ -65,198 +54,281 @@
             100% {
                 top: 100%;
                 opacity: 0;
-                /* 到底部前淡出，避免底部突然消失 */
             }
         }
 
-        /* 优化 Markdown 内容排版，解决换行和间距问题 */
-        .markdown-content {
-            font-size: 0.95rem;
-            line-height: 1.6;
+        /* 进度条动画 */
+        .progress-bar-fill {
+            transition: width 1s ease-out;
+            width: 0%;
         }
 
+        /* 模块化排版 */
         .markdown-content p {
-            margin-bottom: 0.75em;
-        }
-
-        /* 段落间增加间距 */
-        .markdown-content p:last-child {
-            margin-bottom: 0;
-        }
-
-        .markdown-content strong {
-            font-weight: 700;
-            color: #2563eb;
+            margin-bottom: 0.5em;
         }
 
         .markdown-content ul {
             list-style-type: disc;
             padding-left: 1.2em;
-            margin-bottom: 0.75em;
         }
 
-        .markdown-content ol {
-            list-style-type: decimal;
-            padding-left: 1.2em;
-            margin-bottom: 0.75em;
-        }
-
-        .markdown-content li {
-            margin-bottom: 0.25em;
+        /* 玻璃拟态卡片效果 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
 
 <body class="min-h-screen flex flex-col">
 
-    <nav class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm">
-        <div class="container mx-auto flex justify-between items-center max-w-4xl">
+    <nav class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm/50">
+        <div class="container mx-auto flex justify-between items-center max-w-5xl">
             <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-microchip text-blue-600 text-2xl"></i>
+                <div class="bg-blue-600 text-white p-1.5 rounded-lg">
+                    <i class="fa-solid fa-microchip text-lg"></i>
+                </div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight">AI 装机<span class="text-blue-600">诊断室</span>
-                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 font-normal">Database
-                        2025</span>
                 </h1>
             </div>
-            <!-- API 设置按钮已移除 -->
+            <span
+                class="text-xs font-medium bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
+                <i class="fa-solid fa-database mr-1"></i> DB 2025
+            </span>
         </div>
     </nav>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
-        <div class="text-center mb-8 mt-4">
-            <h2 class="text-4xl md:text-5xl font-black mb-3 text-slate-800 tracking-tight">把配置单发给我<br><span
-                    class="text-blue-600">帮你做一次全面体检</span></h2>
-            <p class="text-slate-500 text-sm">内置 2025 最新硬件数据库 · 深度分析 · 拒绝幻觉</p>
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 头部引导区 -->
+        <div class="text-center mb-10 mt-6">
+            <h2 class="text-3xl md:text-5xl font-black mb-4 text-slate-800 tracking-tight leading-tight">
+                把配置单发给我<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                    深度评估硬件实力
+                </span>
+            </h2>
+            <p class="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
+                基于 2025 权威硬件数据库 · 区分硬实力与个人偏好 · 拒绝模棱两可
+            </p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden transition-all duration-300">
+        <!-- 输入区域 -->
+        <div
+            class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden relative group">
             <div class="scan-line" id="scanLine"></div>
             <textarea id="configInput"
-                class="w-full h-48 bg-white text-slate-700 p-6 focus:outline-none resize-none text-base placeholder-slate-300"
+                class="w-full h-40 bg-white text-slate-700 p-6 focus:outline-none resize-none text-base placeholder-slate-300 font-mono"
                 placeholder="在此粘贴配置单...
 例：
 CPU: Intel Core Ultra 5 245KF
 显卡: GeForce RTX 5060
-内存: 32G DDR5
+内存: 32G DDR5 6000MHz
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
+            <!-- 识别栏优化：更紧凑 -->
             <div id="detectedHardwareBar"
-                class="hidden px-6 py-3 bg-blue-50 border-t border-blue-100 text-xs text-blue-800 flex flex-col gap-2">
-                <div class="flex items-center gap-2 font-bold text-blue-600 uppercase tracking-wider">
-                    <i class="fa-solid fa-microchip"></i> 系统已识别硬件 (将注入 AI 上下文)
-                </div>
-                <div id="detectedTags" class="flex flex-wrap gap-2 mt-1"></div>
+                class="hidden bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-2">Detected:</span>
+                <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                <div class="text-xs text-slate-400 flex gap-2">
-                    <span id="dbStatus"><i class="fa-solid fa-spinner fa-spin"></i> 数据加载中...</span>
+            <div class="p-4 bg-white border-t border-slate-100 flex justify-between items-center">
+                <div class="text-xs text-slate-400 flex items-center gap-2">
+                    <span id="dbStatus" class="flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin"></i>
+                        正在加载数据库...</span>
                 </div>
                 <button onclick="startAnalysis()" id="scanBtn"
-                    class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-all shadow-md flex items-center gap-2">
-                    <i class="fa-solid fa-microscope"></i> 开始体检
+                    class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-microscope"></i> 开始诊断
                 </button>
             </div>
         </div>
 
-        <div id="errorArea" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
-            <strong class="font-bold">分析失败！</strong>
-            <span class="block sm:inline" id="errorText"></span>
-            <span class="absolute top-0 bottom-0 right-0 px-4 py-3"
-                onclick="document.getElementById('errorArea').classList.add('hidden')"><i
-                    class="fa-solid fa-times cursor-pointer"></i></span>
+        <!-- 错误提示 -->
+        <div id="errorArea"
+            class="hidden mt-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r shadow-sm relative">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-circle-exclamation mt-1"></i>
+                <div>
+                    <strong class="font-bold block mb-1">分析中断</strong>
+                    <span class="text-sm opacity-90" id="errorText"></span>
+                </div>
+            </div>
+            <button class="absolute top-3 right-4 text-red-400 hover:text-red-700"
+                onclick="document.getElementById('errorArea').classList.add('hidden')">
+                <i class="fa-solid fa-times"></i>
+            </button>
         </div>
 
-        <div id="resultArea" class="hidden mt-8 transition-opacity duration-500 opacity-0">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- 结果展示区域 (重构核心) -->
+        <div id="resultArea" class="hidden mt-10 transition-all duration-700 opacity-0 transform translate-y-4">
+
+            <!-- 第一层：总分与维度概览 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+
+                <!-- 左侧：总分卡片 (占4列) -->
                 <div
-                    class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">综合评分 (0-150)</p>
-                    <div class="relative flex items-baseline justify-center">
-                        <div class="text-6xl font-black text-slate-800 tracking-tighter mb-1" id="scoreDisplay">--</div>
-                        <!-- 偏好加分标签：位置微调，更加显眼 -->
-                        <div id="prefTag"
-                            class="hidden absolute -top-4 -right-16 bg-pink-100 text-pink-600 text-[10px] font-bold px-2 py-0.5 rounded-full transform rotate-12 border border-pink-200 shadow-sm whitespace-nowrap">
-                            <i class="fa-solid fa-heart"></i> <span id="prefScoreText">加分</span>
+                    class="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none">
+                    </div>
+
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">综合评分</h3>
+                            <div id="verdictBadge"
+                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-500">
+                                --
+                            </div>
+                        </div>
+
+                        <div class="flex items-baseline gap-1 mt-2 mb-6">
+                            <span class="text-7xl font-black tracking-tighter text-slate-800"
+                                id="scoreDisplay">--</span>
+                            <span class="text-lg text-slate-400 font-medium">/ 150</span>
+                        </div>
+
+                        <!-- 偏好加分区域 (内容由JS动态控制) -->
+                        <div id="prefContainer" class="hidden mb-6 rounded-lg transition-all"></div>
+
+                        <!-- 分数构成微注 -->
+                        <div class="mt-auto pt-4 border-t border-slate-100 text-[10px] text-slate-400 flex gap-4">
+                            <div><span class="w-2 h-2 rounded-full bg-slate-800 inline-block mr-1"></span>硬实力 (Max 120)
+                            </div>
+                            <div><span class="w-2 h-2 rounded-full bg-pink-500 inline-block mr-1"></span>偏好分 (Max 30)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：四维分析 (占8列) -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">硬实力解构</h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- 性能 -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-bold text-slate-700"><i
+                                        class="fa-solid fa-gauge-high mr-2 text-blue-500 w-4"></i>性能释放</span>
+                                <span class="font-bold text-slate-900" id="score-perf">--</span>
+                            </div>
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="bar-perf" class="h-full bg-blue-500 rounded-full progress-bar-fill"></div>
+                            </div>
+                        </div>
+
+                        <!-- 性价比 -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-bold text-slate-700"><i
+                                        class="fa-solid fa-coins mr-2 text-emerald-500 w-4"></i>性价比</span>
+                                <span class="font-bold text-slate-900" id="score-val">--</span>
+                            </div>
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="bar-val" class="h-full bg-emerald-500 rounded-full progress-bar-fill"></div>
+                            </div>
+                        </div>
+
+                        <!-- 兼容性 -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-bold text-slate-700"><i
+                                        class="fa-solid fa-puzzle-piece mr-2 text-amber-500 w-4"></i>兼容性</span>
+                                <span class="font-bold text-slate-900" id="score-comp">--</span>
+                            </div>
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="bar-comp" class="h-full bg-amber-500 rounded-full progress-bar-fill"></div>
+                            </div>
+                        </div>
+
+                        <!-- 品质 -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-bold text-slate-700"><i
+                                        class="fa-solid fa-shield-halved mr-2 text-indigo-500 w-4"></i>品质/做工</span>
+                                <span class="font-bold text-slate-900" id="score-qual">--</span>
+                            </div>
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div id="bar-qual" class="h-full bg-indigo-500 rounded-full progress-bar-fill"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 分数构成解释 -->
-                    <div class="text-[10px] text-slate-400 mt-1 mb-2 border-t border-slate-100 pt-1 w-full text-center">
-                        <span class="inline-block px-1">硬件基础分 (Max 120)</span> + <span
-                            class="inline-block px-1 text-pink-400">偏好加成 (Max 30)</span>
+                    <!-- 保留雷达图，但缩小并作为辅助 -->
+                    <div class="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center">
+                        <div
+                            class="h-32 w-full flex items-center justify-center opacity-60 grayscale hover:grayscale-0 transition-all">
+                            <canvas id="radarChart"></canvas>
+                        </div>
                     </div>
-
-                    <div id="verdictBadge"
-                        class="px-4 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 mt-1">分析中</div>
-                </div>
-
-                <div
-                    class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col items-center justify-center col-span-2">
-                    <div class="w-full h-48 flex items-center justify-center"><canvas id="radarChart"></canvas></div>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm mb-6 relative">
-                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-2xl"></div>
-                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg"><i
-                        class="fa-solid fa-clipboard-check text-blue-600"></i> 诊断报告</h3>
-                <div id="aiSummary"
-                    class="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed markdown-content"></div>
-                <div id="aiModulesContainer" class="space-y-3 mt-6"></div>
+
+            <!-- 第二层：AI 诊断详情 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：文字报告 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-800"></div>
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                            <i class="fa-solid fa-comment-dots text-slate-400"></i> AI 诊断综述
+                        </h3>
+                        <div id="aiSummary"
+                            class="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed markdown-content">
+                            <!-- AI 文本内容 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：检测到的关键点 (Modules) -->
+                <div class="lg:col-span-1">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">详细检查项</h3>
+                    <div id="aiModulesContainer" class="space-y-3">
+                        <!-- 动态生成的模块卡片 -->
+                    </div>
+                </div>
             </div>
-            <div class="text-center">
-                <p class="text-xs text-slate-400">评分依据：本地权威数据库 (2025 Hardware DB) + DeepSeek 深度推理</p>
+
+            <div class="text-center mt-12 mb-8">
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB
+                </p>
             </div>
         </div>
     </main>
 
     <script>
-        // 初始化检查：确保外部数据文件已加载
-        // 使用 defer 后，脚本会在 DOM 解析完后执行，所以 window.onload 依然有效
         window.addEventListener('load', function () {
             if (typeof HARDWARE_DB === 'undefined') {
                 console.error("Critical: hardware_data.js failed to load!");
-                document.getElementById('dbStatus').innerHTML = '<span class="text-red-500"><i class="fa-solid fa-exclamation-circle"></i> 数据加载失败</span>';
+                document.getElementById('dbStatus').innerHTML = '<span class="text-red-500 font-bold">数据加载失败</span>';
             } else {
-                console.log("Hardware Database loaded successfully.");
-                document.getElementById('dbStatus').innerHTML = '<i class="fa-solid fa-database text-blue-500"></i> 2025 数据库已就绪';
+                document.getElementById('dbStatus').innerHTML = '<span class="text-emerald-600 font-medium"><i class="fa-solid fa-check-circle"></i> 2025 DB Ready</span>';
             }
         });
 
-        const DEFAULT_CONFIG = { baseUrl: "", apiKey: "" };
+        // 简化的别名映射
+        const ALIAS_MAP_KEYS = typeof ALIAS_MAP !== 'undefined' ? ALIAS_MAP : {};
+
         let radarChart = null;
 
         function extractHardwareContext(text) {
             if (typeof HARDWARE_DB === 'undefined') return [];
-
             let lowerText = text.toLowerCase().replace(/\s+/g, ' ');
             let matches = [];
             let matchedKeys = new Set();
 
-            for (const [alias, realKey] of Object.entries(ALIAS_MAP)) {
-                if (lowerText.includes(alias)) {
-                    if (!matchedKeys.has(realKey)) {
-                        const item = HARDWARE_DB[realKey];
-                        if (item) {
-                            matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: ${item.price} (识别自 "${alias}")`);
-                            matchedKeys.add(realKey);
-                        }
+            for (const [alias, realKey] of Object.entries(ALIAS_MAP_KEYS)) {
+                if (lowerText.includes(alias) && !matchedKeys.has(realKey)) {
+                    const item = HARDWARE_DB[realKey];
+                    if (item) {
+                        matches.push(`[已识别] ${item.name} | Score: ${item.score} | Price: $${item.price} (via "${alias}")`);
+                        matchedKeys.add(realKey);
                     }
                 }
             }
-
-            const sortedKeys = Object.keys(HARDWARE_DB).sort((a, b) => b.length - a.length);
-            sortedKeys.forEach(key => {
-                if (lowerText.includes(key) && !matchedKeys.has(key)) {
-                    const isAlreadyCovered = Array.from(matchedKeys).some(k => k.includes(key) && k !== key);
-                    if (!isAlreadyCovered) {
-                        const item = HARDWARE_DB[key];
-                        matches.push(`[官方数据确认] ${item.name} | PassMark评分: ${item.score} | 参考价: ${item.price} (Source: Local DB)`);
-                        matchedKeys.add(key);
-                    }
-                }
-            });
             return matches;
         }
 
@@ -270,82 +342,64 @@ CPU: Intel Core Ultra 5 245KF
             const detectedBar = document.getElementById('detectedHardwareBar');
             const detectedTags = document.getElementById('detectedTags');
 
+            // Reset UI
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 连接服务器分析中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 深度分析中...';
             document.getElementById('scanLine').style.display = 'block';
             resultArea.classList.add('hidden');
-            resultArea.classList.remove('opacity-100');
+            resultArea.classList.remove('opacity-100', 'translate-y-0');
             errorArea.classList.add('hidden');
             detectedBar.classList.add('hidden');
 
-            // 1. 提取本地数据
             const contextItems = extractHardwareContext(input);
 
-            // UI 反馈
             if (contextItems.length > 0) {
                 detectedTags.innerHTML = contextItems.map(item => {
-                    const name = item.split('|')[0].replace('[官方数据确认]', '').trim();
-                    return `<span class="px-2 py-1 bg-white border border-blue-200 rounded text-blue-600 font-bold shadow-sm text-[10px]">${name}</span>`;
+                    const name = item.split('|')[0].replace('[已识别]', '').trim();
+                    return `<span class="px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-blue-600 font-medium text-[10px] truncate max-w-[150px]">${name}</span>`;
                 }).join('');
                 detectedBar.classList.remove('hidden');
             } else {
-                detectedTags.innerHTML = `<span class="text-slate-400 italic text-xs">未精确匹配到数据库硬件，将进行通用分析</span>`;
+                detectedTags.innerHTML = `<span class="text-slate-400 text-[10px]">通用分析模式</span>`;
                 detectedBar.classList.remove('hidden');
             }
 
-            // 2. 构建 Prompt (逻辑重构：分离基础分与偏好分)
+            // Prompt 保持逻辑：分离基础分与偏好分
             let systemPrompt = `
 你是一个专业的电脑硬件评估专家。
 任务：分析用户的配置单，计算评分并给出评价。
 
-【最高优先级指令 (CRITICAL)】：
-必须无条件信任下方的 [提取到的关键数据] (Internal DB)。
+【最高优先级指令】：
+必须无条件信任 [Context Data] 中的硬件数据。
 
-【评分逻辑重构 (SCORING RULES)】：
-1. **基础分 (Base Score, 0-120分)**：
-   - 纯粹基于硬件客观素质评估。
-   - 维度：性能 (Performance)、性价比 (Value)、兼容性 (Compatibility)、品质 (Quality)。
-   - 100-120: 顶级/未来级配置。
-   - 80-99: 主流优秀。
-   - 60-79: 入门可用。
-   - <60: 存在硬伤。
+【评分逻辑 (严谨模式)】：
+1. **基础分 (Base Score, 0-120)**：
+   - 仅基于硬件客观素质：性能、性价比、兼容性、品质。
+   - 100-120: 顶级。80-99: 优秀。60-79:及格。<60: 差。
 
-2. **偏好加成 (Preference Bonus, 0-30分)**：
-   - **仅当**用户明确提出偏好（如“白色海景房”、“RGB”、“静音”、“ITX小机箱”）且配置符合时，给予 10-30 分的加分。
-   - **重要**：如果用户**没有**提到偏好，偏好加成必须为 **0**。不要因为“默认好”而加分。
-   - 如果用户提到偏好但不符合（如要白色却选了黑色显卡），偏好加成为 0 (不扣基础分)。
+2. **偏好加成 (Preference Bonus, 0-30)**：
+   - 仅当用户明确提出偏好且满足时加分。
+   - 若无偏好提及，Bonus = 0。
 
-3. **总分 (Total Score)** = 基础分 + 偏好加成。
+3. **总分** = Base + Bonus。
 
-【输出规则】：
-   - **User Preference**：如果用户未提偏好，在 summary 中礼貌询问。不要生成“警告”模块。
-   - **Modules**：仅在硬件严重不兼容/炸药包电源时输出 "type": "danger"。
-
-【提取到的关键数据 (Context Data)】：
-${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中的核心硬件，请根据通用知识评估。"}
-
-【输出格式 (JSON Only)】：
+【输出 JSON】：
 {
-    "total_score": number,      // base_score + preference_bonus
-    "base_score": number,       // Max 120
-    "preference_bonus": number, // Max 30, 0 if undefined
-    "verdict": "简短评价",
+    "total_score": number,
+    "base_score": number,
+    "preference_bonus": number,
+    "verdict": "超短评价(如：全能战士 / 颜值正义 / 智商税警告)",
     "summary": "Markdown详细点评",
-    "sub_scores": { 
-        "performance": number,  // 0-120
-        "value": number,        // 0-120
-        "compatibility": number,// 0-120
-        "quality": number       // 0-120
-    },
+    "sub_scores": { "performance": number, "value": number, "compatibility": number, "quality": number },
     "is_preference_match": boolean,
-    "modules": [ { "type": "success/warning/danger", "title": "标题", "content": "内容" } ]
-}`;
+    "modules": [ { "type": "success/warning/danger", "title": "短标题", "content": "简练内容" } ]
+}
+Context Data:
+${contextItems.join('\n')}
+`;
 
-            // 3. 调用后端 API
             try {
-                let apiUrl = '/api/analyze';
-
-                const response = await fetch(apiUrl, {
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -356,122 +410,144 @@ ${contextItems.length > 0 ? contextItems.join('\n') : "未匹配到数据库中�
                     })
                 });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`请求失败 (${response.status}): ${errText}`);
-                }
-
+                if (!response.ok) throw new Error(await response.text());
                 const data = await response.json();
 
-                let contentStr = "";
-                if (data.choices && data.choices.length > 0) {
-                    contentStr = data.choices[0].message.content;
-                } else if (data.message && data.message.content) {
-                    contentStr = data.message.content;
-                } else {
-                    contentStr = JSON.stringify(data);
-                }
-
+                let contentStr = data.choices?.[0]?.message?.content || data.message?.content || JSON.stringify(data);
                 const jsonStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
+
                 renderUI(JSON.parse(jsonStr));
 
             } catch (error) {
-                console.error("API Error:", error);
-                let msg = error.message;
-                if (error.name === 'TypeError' && msg.includes('Failed to fetch')) {
-                    msg = "网络连接失败。<br>可能原因：<br>1. 您正在本地直接打开 HTML 文件 (file://)，请改用 http://localhost:3000 或 Render 网址访问。<br>2. 服务器未启动或休眠中。";
-                }
-                document.getElementById('errorText').innerHTML = msg;
+                console.error("Analysis Error:", error);
+                document.getElementById('errorText').innerText = "服务暂时不可用，请稍后重试或检查网络。";
                 errorArea.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始体检';
+                btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
                 document.getElementById('scanLine').style.display = 'none';
             }
         }
 
-        // ==========================================
-        // 4. UI 渲染
-        // ==========================================
         function renderUI(data) {
             const area = document.getElementById('resultArea');
             area.classList.remove('hidden');
+            // Trigger reflow
             void area.offsetWidth;
-            area.classList.add('opacity-100');
+            area.classList.add('opacity-100', 'translate-y-0');
+
+            // 1. 核心分数区
+            const finalScore = data.total_score !== undefined ? data.total_score : data.score;
+            const baseScore = data.base_score || finalScore;
 
             const scoreEl = document.getElementById('scoreDisplay');
-            const badgeEl = document.getElementById('verdictBadge');
-            const prefTag = document.getElementById('prefTag');
+            const verdictEl = document.getElementById('verdictBadge');
 
-            // 兼容旧版API返回（以防万一）：如果没有total_score字段，回退到score
-            const finalScore = data.total_score !== undefined ? data.total_score : data.score;
+            // 动态颜色
+            let scoreColorClass = finalScore >= 120 ? "text-emerald-600" : (finalScore >= 90 ? "text-blue-600" : (finalScore >= 60 ? "text-amber-500" : "text-red-500"));
+            let badgeClass = finalScore >= 120 ? "bg-emerald-100 text-emerald-700" : (finalScore >= 90 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700");
 
-            let color = finalScore >= 120 ? "text-emerald-500" : (finalScore >= 90 ? "text-blue-500" : "text-red-500");
-            let badgeColor = finalScore >= 120 ? "bg-emerald-100 text-emerald-700" : (finalScore >= 90 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700");
-
-            badgeEl.innerText = data.verdict;
-
-            scoreEl.className = `text-6xl font-black tracking-tighter mb-1 ${color}`;
+            scoreEl.className = `text-7xl font-black tracking-tighter ${scoreColorClass}`;
             scoreEl.innerText = finalScore;
-            badgeEl.className = `px-4 py-1 rounded-full text-xs font-bold mt-2 ${badgeColor}`;
 
-            // 偏好加分显示逻辑优化
-            // 判断依据：is_preference_match 为 true，且 preference_bonus 大于 0
+            verdictEl.className = `px-3 py-1 rounded-md text-sm font-bold ml-auto ${badgeClass}`;
+            verdictEl.innerText = data.verdict;
+
+            // 2. 偏好加分动态显示逻辑 (优化点)
+            const prefContainer = document.getElementById('prefContainer');
+            prefContainer.classList.remove('hidden'); // 总是移除hidden
+
             if (data.is_preference_match && data.preference_bonus > 0) {
-                prefTag.classList.remove('hidden');
-                document.getElementById('prefScoreText').innerText = `偏好达成 +${data.preference_bonus}`;
+                // 有加分：高亮粉色样式
+                prefContainer.className = "mb-6 bg-pink-50 border border-pink-100 rounded-lg p-3 flex items-center gap-3 transition-all";
+                prefContainer.innerHTML = `
+                    <div class="bg-pink-100 text-pink-500 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-pink-400 font-bold uppercase">偏好 Bonus</div>
+                        <div class="text-sm font-bold text-pink-600">
+                            颜值/信仰加成 <span class="text-lg ml-1">+${data.preference_bonus}</span>
+                        </div>
+                    </div>`;
             } else {
-                prefTag.classList.add('hidden');
+                // 无加分：淡灰色小字提醒
+                prefContainer.className = "mb-6 p-2 flex items-center gap-2 text-slate-400 opacity-60 hover:opacity-100 transition-opacity border border-transparent";
+                prefContainer.innerHTML = `
+                    <div class="text-slate-300 text-xs"><i class="fa-regular fa-heart"></i></div>
+                    <div class="text-[10px] font-medium">
+                        未检测到特殊偏好（如纯白/RGB），评分纯基于性能。
+                    </div>`;
             }
 
+            // 3. 进度条动画
+            const setBar = (id, score, max = 120) => {
+                const el = document.getElementById(id);
+                const textEl = document.getElementById(id.replace('bar-', 'score-'));
+                const percentage = Math.min((score / max) * 100, 100);
+
+                textEl.innerText = score;
+                el.style.width = '0%'; // reset
+                setTimeout(() => { el.style.width = `${percentage}%`; }, 100);
+            };
+
+            setBar('bar-perf', data.sub_scores.performance);
+            setBar('bar-val', data.sub_scores.value);
+            setBar('bar-comp', data.sub_scores.compatibility);
+            setBar('bar-qual', data.sub_scores.quality);
+
+            // 4. 诊断报告
             document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
 
+            // 5. 模块卡片
             const modContainer = document.getElementById('aiModulesContainer');
             modContainer.innerHTML = '';
             if (data.modules) {
                 data.modules.forEach(m => {
                     const styles = {
-                        success: { icon: 'fa-check-circle', color: 'text-emerald-500', border: 'border-emerald-100', bg: 'bg-emerald-50' },
-                        warning: { icon: 'fa-exclamation-triangle', color: 'text-amber-500', border: 'border-amber-100', bg: 'bg-amber-50' },
-                        danger: { icon: 'fa-times-circle', color: 'text-red-500', border: 'border-red-100', bg: 'bg-red-50' }
-                    }[m.type] || { icon: 'fa-info-circle', color: 'text-blue-500', border: 'border-blue-100', bg: 'bg-blue-50' };
+                        success: { icon: 'fa-check', color: 'text-emerald-600', border: 'border-l-4 border-l-emerald-500', bg: 'bg-white' },
+                        warning: { icon: 'fa-triangle-exclamation', color: 'text-amber-500', border: 'border-l-4 border-l-amber-500', bg: 'bg-white' },
+                        danger: { icon: 'fa-ban', color: 'text-red-500', border: 'border-l-4 border-l-red-500', bg: 'bg-red-50' }
+                    }[m.type] || { icon: 'fa-info', color: 'text-blue-500', border: 'border-l-4 border-l-blue-500', bg: 'bg-white' };
 
                     const div = document.createElement('div');
-                    div.className = `p-4 rounded-lg border ${styles.border} ${styles.bg} flex items-start gap-3`;
+                    div.className = `p-4 rounded-r-lg shadow-sm border-y border-r border-slate-100 ${styles.border} ${styles.bg} flex gap-3 transition-transform hover:translate-x-1`;
                     div.innerHTML = `
-                        <div class="flex-shrink-0 mt-1"><i class="fa-solid ${styles.icon} ${styles.color} text-lg"></i></div>
-                        <div class="flex-1 min-w-0"> 
-                            <h4 class="font-bold text-sm text-slate-700 mb-1">${m.title}</h4>
-                            <div class="text-sm text-slate-600 markdown-content break-words">${marked.parse(m.content)}</div>
+                        <div class="mt-0.5"><i class="fa-solid ${styles.icon} ${styles.color}"></i></div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 leading-tight mb-1">${m.title}</h4>
+                            <div class="text-xs text-slate-500 leading-relaxed">${marked.parse(m.content)}</div>
                         </div>`;
                     modContainer.appendChild(div);
                 });
             }
 
+            // 6. 雷达图 (辅助)
             if (radarChart) radarChart.destroy();
             const ctx = document.getElementById('radarChart').getContext('2d');
-
-            // 雷达图重构：移除偏好维度，只保留4个硬件维度
             radarChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: ['性能', '性价比', '兼容性', '品质'],
                     datasets: [{
-                        label: '硬件评分',
-                        data: [
-                            data.sub_scores.performance,
-                            data.sub_scores.value,
-                            data.sub_scores.compatibility,
-                            data.sub_scores.quality
-                        ],
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: 'rgb(59, 130, 246)',
-                        pointBackgroundColor: 'rgb(59, 130, 246)',
-                        pointBorderColor: '#fff'
+                        label: '得分',
+                        data: [data.sub_scores.performance, data.sub_scores.value, data.sub_scores.compatibility, data.sub_scores.quality],
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#94a3b8',
+                        borderWidth: 1,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#3b82f6'
                     }]
                 },
                 options: {
-                    scales: { r: { suggestedMin: 0, suggestedMax: 120, ticks: { display: false } } }, // Max 调整为 120 匹配基础分
+                    scales: {
+                        r: {
+                            suggestedMin: 0,
+                            suggestedMax: 120,
+                            ticks: { display: false },
+                            grid: { color: '#e2e8f0' }
+                        }
+                    },
                     plugins: { legend: { display: false } }
                 }
             });
