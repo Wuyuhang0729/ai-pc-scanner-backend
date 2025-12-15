@@ -55,7 +55,6 @@
 
         /* ================= 动态组件系统 (UI Kit) ================= */
 
-        /* [核心升级] 聚光灯卡片 3.0 */
         .interactive-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
@@ -70,12 +69,7 @@
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 光斑层 (Glow Layer)
-           使用 CSS 变量接收 JS 计算出的物理参数
-           --spot-size: 呼吸变大的尺寸
-           --spot-opacity: 呼吸变化的透明度
-           --mouse-x/y: 带有惯性延迟的坐标
-        */
+        /* 光斑层 */
         .interactive-card::before {
             content: "";
             position: absolute;
@@ -88,12 +82,11 @@
                     transparent 40%);
             z-index: 1;
             opacity: 0;
-            /* JS 激活 spotlight-active 后显示 */
             transition: opacity 0.5s;
             pointer-events: none;
         }
 
-        /* 边框高亮层 (Border Highlight) - 尺寸略小，更聚光 */
+        /* 边框高亮层 */
         .interactive-card::after {
             content: "";
             position: absolute;
@@ -117,7 +110,6 @@
             pointer-events: none;
         }
 
-        /* 激活光效 */
         .spotlight-active .interactive-card::before,
         .spotlight-active .interactive-card::after {
             opacity: 1;
@@ -128,9 +120,7 @@
             box-shadow: var(--shadow-hover);
         }
 
-        /* 深色模式下的光斑调整 - 基础亮度由 JS 控制，这里只微调颜色 */
         html.dark .interactive-card::before {
-            /* 这里的颜色基底稍微亮一点 */
             background: radial-gradient(var(--spot-size, 800px) circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
                     rgba(255, 255, 255, var(--spot-opacity, 0.08)),
                     transparent 40%);
@@ -167,6 +157,17 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
+        .ui-input-wrapper {
+            position: relative;
+            background-color: var(--c-card-bg);
+            border: 1px solid var(--c-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: background-color var(--duration-theme) var(--ease-out-quart),
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
         .ui-input-wrapper:focus-within {
             border-color: var(--c-primary);
             box-shadow: 0 0 0 4px var(--c-focus-ring);
@@ -201,15 +202,15 @@
             box-shadow: var(--shadow-hover);
         }
 
-        .ui-btn-primary:disabled {
-            background-color: var(--c-border);
-            color: var(--c-text-mute);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        /* 运行状态下的按钮样式 */
+        .ui-btn-primary.processing {
+            background-color: var(--c-card-bg);
+            color: var(--c-primary);
+            border: 1px solid var(--c-primary);
+            box-shadow: 0 0 10px var(--c-glow);
+            cursor: wait;
         }
 
-        /* 标签动画 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
@@ -251,7 +252,13 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* Markdown 增强排版 */
+        /* [优化] 增加数据字体，用于分数显示，增加精密感 */
+        .font-data {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            letter-spacing: -0.05em;
+        }
+
+        /* Markdown 增强 */
         .markdown-content strong {
             color: var(--c-text-head);
             font-weight: 700;
@@ -404,9 +411,11 @@
             border-bottom: none;
         }
 
+        /* 使用等宽数据字体 */
         .rule-score {
             font-weight: 700;
             color: var(--c-text-head);
+            font-family: ui-monospace, SFMono-Regular, monospace;
         }
 
         ::-webkit-scrollbar {
@@ -643,8 +652,10 @@ CPU: Intel Core Ultra 5 245KF
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
-                            <span class="text-7xl font-black tracking-tighter ui-heading" id="scoreDisplay">0</span>
-                            <span class="text-lg ui-text-mute font-medium">/ 100</span>
+                            <!-- [优化] 使用 font-data 等宽字体 -->
+                            <span class="text-7xl font-black tracking-tighter ui-heading font-data"
+                                id="scoreDisplay">0</span>
+                            <span class="text-lg ui-text-mute font-medium font-data">/ 100</span>
                         </div>
 
                         <div id="prefContainer" class="hidden mb-6"></div>
@@ -668,7 +679,7 @@ CPU: Intel Core Ultra 5 245KF
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold ui-text-mute"><i
                                         class="fa-solid fa-gauge-high mr-1.5 ui-text-highlight"></i>性能释放</span>
-                                <span class="font-bold ui-heading" id="score-perf">--</span>
+                                <span class="font-bold ui-heading font-data" id="score-perf">--</span>
                             </div>
                             <div class="progress-track">
                                 <div id="bar-perf" class="progress-fill"></div>
@@ -678,7 +689,7 @@ CPU: Intel Core Ultra 5 245KF
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold ui-text-mute"><i
                                         class="fa-solid fa-coins mr-1.5 ui-text-highlight"></i>性价比</span>
-                                <span class="font-bold ui-heading" id="score-val">--</span>
+                                <span class="font-bold ui-heading font-data" id="score-val">--</span>
                             </div>
                             <div class="progress-track">
                                 <div id="bar-val" class="progress-fill"></div>
@@ -688,7 +699,7 @@ CPU: Intel Core Ultra 5 245KF
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold ui-text-mute"><i
                                         class="fa-solid fa-puzzle-piece mr-1.5 ui-text-highlight"></i>兼容性</span>
-                                <span class="font-bold ui-heading" id="score-comp">--</span>
+                                <span class="font-bold ui-heading font-data" id="score-comp">--</span>
                             </div>
                             <div class="progress-track">
                                 <div id="bar-comp" class="progress-fill"></div>
@@ -698,7 +709,7 @@ CPU: Intel Core Ultra 5 245KF
                             <div class="flex justify-between text-xs mb-1.5">
                                 <span class="font-bold ui-text-mute"><i
                                         class="fa-solid fa-shield-halved mr-1.5 ui-text-highlight"></i>品质/做工</span>
-                                <span class="font-bold ui-heading" id="score-qual">--</span>
+                                <span class="font-bold ui-heading font-data" id="score-qual">--</span>
                             </div>
                             <div class="progress-track">
                                 <div id="bar-qual" class="progress-fill"></div>
@@ -858,15 +869,22 @@ CPU: Intel Core Ultra 5 245KF
                 this.currentData = data;
                 if (this.chartInstance) this.chartInstance.destroy();
 
+                // [优化] 图表渐变色 (Gradient Fill)
+                const primary = colors['--c-primary'];
+                const mute = colors['--c-text-mute'];
+
+                // Create Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, primary.replace(')', ', 0.5)')); // More opaque at top
+                gradient.addColorStop(1, primary.replace(')', ', 0.1)')); // Transparent at bottom
+
+                // Helper for static colors
                 const hexToRgba = (hex, alpha) => {
                     const r = parseInt(hex.slice(1, 3), 16);
                     const g = parseInt(hex.slice(3, 5), 16);
                     const b = parseInt(hex.slice(5, 7), 16);
                     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
                 };
-
-                const primary = colors['--c-primary'];
-                const mute = colors['--c-text-mute'];
 
                 this.chartInstance = new Chart(ctx, {
                     type: 'radar',
@@ -875,7 +893,7 @@ CPU: Intel Core Ultra 5 245KF
                         datasets: [{
                             label: '评分',
                             data: [data.sub_scores.performance, data.sub_scores.value, data.sub_scores.compatibility, data.sub_scores.quality],
-                            backgroundColor: hexToRgba(primary, 0.2),
+                            backgroundColor: gradient, // Use Gradient
                             borderColor: primary,
                             borderWidth: 2,
                             pointRadius: 0,
@@ -886,7 +904,7 @@ CPU: Intel Core Ultra 5 245KF
                     options: {
                         scales: {
                             r: {
-                                suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
+                                suggestedMin: 0, suggestedMax: 100, ticks: { display: false },
                                 grid: { color: hexToRgba(mute, 0.1) },
                                 angleLines: { color: hexToRgba(mute, 0.1) },
                                 pointLabels: {
@@ -1040,6 +1058,9 @@ CPU: Intel Core Ultra 5 245KF
             const inputCard = document.getElementById('inputCard');
 
             btn.disabled = true;
+            // [交互优化] 按钮添加处理中状态
+            btn.classList.add('processing');
+
             let loadingStep = 0;
             const loadingTexts = ["连接 DeepSeek 分析引擎...", "读取硬件参数...", "交叉比对 2025 数据库...", "生成兼容性报告...", "计算最终得分..."];
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingTexts[0]}`;
@@ -1091,6 +1112,7 @@ CPU: Intel Core Ultra 5 245KF
             } finally {
                 clearInterval(loadingInterval);
                 btn.disabled = false;
+                btn.classList.remove('processing'); // 移除处理状态
                 btn.innerHTML = '<i class="fa-solid fa-microscope"></i> 开始诊断';
             }
         }
