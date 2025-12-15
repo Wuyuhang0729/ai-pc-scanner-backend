@@ -8,6 +8,21 @@
 
     <link rel="dns-prefetch" href="https://api.deepseek.com">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 配置 Tailwind 以支持手动切换深色模式 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b', // 自定义深色背景
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
         rel="stylesheet">
@@ -18,9 +33,7 @@
     <style>
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f1f5f9;
-            /* 加深一点背景色，增加卡片对比度 */
-            color: #334155;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .scan-line {
@@ -63,63 +76,124 @@
             width: 0%;
         }
 
-        /* 模块化排版 */
+        /* 模块化排版优化：确保建议内容换行清晰 */
         .markdown-content p {
+            margin-bottom: 0.75em;
+        }
+
+        .markdown-content ul,
+        .module-content ul {
+            list-style-type: disc;
+            padding-left: 1.2em;
             margin-bottom: 0.5em;
         }
 
-        .markdown-content ul {
-            list-style-type: disc;
-            padding-left: 1.2em;
+        /* 针对列表项增加间距，解决挤在一起的问题 */
+        .markdown-content li,
+        .module-content li {
+            margin-bottom: 0.4em;
+            line-height: 1.6;
         }
 
-        /* 玻璃拟态卡片效果 */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            font-weight: 700;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+
+        /* 玻璃拟态卡片效果适配深色模式 */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
 
-    <nav class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm/50">
+    <nav
+        class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4 sticky top-0 z-50 transition-colors duration-300">
         <div class="container mx-auto flex justify-between items-center max-w-5xl">
             <div class="flex items-center space-x-2">
-                <div class="bg-blue-600 text-white p-1.5 rounded-lg">
+                <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
                     <i class="fa-solid fa-microchip text-lg"></i>
                 </div>
-                <h1 class="text-xl font-bold text-slate-800 tracking-tight">AI 装机<span class="text-blue-600">诊断室</span>
-                </h1>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-white tracking-tight">AI 装机<span
+                        class="text-blue-600 dark:text-blue-400">诊断室</span></h1>
             </div>
-            <span
-                class="text-xs font-medium bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
-                <i class="fa-solid fa-database mr-1"></i> DB 2025
-            </span>
+
+            <div class="flex items-center gap-3">
+                <span
+                    class="text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-600 hidden sm:inline-block">
+                    <i class="fa-solid fa-database mr-1"></i> DB 2025
+                </span>
+
+                <!-- 深色模式切换按钮 -->
+                <button id="themeToggleBtn" onclick="toggleTheme()"
+                    class="p-2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-yellow-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all focus:outline-none">
+                    <i class="fa-solid fa-sun dark:hidden"></i>
+                    <i class="fa-solid fa-moon hidden dark:inline"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl">
         <!-- 头部引导区 -->
         <div class="text-center mb-10 mt-6">
-            <h2 class="text-3xl md:text-5xl font-black mb-4 text-slate-800 tracking-tight leading-tight">
+            <h2
+                class="text-3xl md:text-5xl font-black mb-4 text-slate-800 dark:text-white tracking-tight leading-tight">
                 把配置单发给我<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                     深度评估硬件实力
                 </span>
             </h2>
-            <p class="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
+            <p class="text-slate-500 dark:text-slate-400 text-sm md:text-base max-w-2xl mx-auto">
                 基于 2025 权威硬件数据库 · 区分硬实力与个人偏好 · 拒绝模棱两可
             </p>
         </div>
 
         <!-- 输入区域 -->
         <div
-            class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden relative group">
+            class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-200 dark:border-slate-700 overflow-hidden relative group transition-colors duration-300">
             <div class="scan-line" id="scanLine"></div>
             <textarea id="configInput"
-                class="w-full h-40 bg-white text-slate-700 p-6 focus:outline-none resize-none text-base placeholder-slate-300 font-mono"
+                class="w-full h-40 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 p-6 focus:outline-none resize-none text-base placeholder-slate-300 dark:placeholder-slate-600 font-mono transition-colors"
                 placeholder="在此粘贴配置单...
 例：
 CPU: Intel Core Ultra 5 245KF
@@ -127,20 +201,22 @@ CPU: Intel Core Ultra 5 245KF
 内存: 32G DDR5 6000MHz
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
-            <!-- 识别栏优化：更紧凑 -->
+            <!-- 识别栏 -->
             <div id="detectedHardwareBar"
-                class="hidden bg-slate-50 border-t border-slate-100 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-2">Detected:</span>
+                class="hidden bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px]">
+                <span
+                    class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-2">Detected:</span>
                 <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="p-4 bg-white border-t border-slate-100 flex justify-between items-center">
-                <div class="text-xs text-slate-400 flex items-center gap-2">
+            <div
+                class="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center transition-colors">
+                <div class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2">
                     <span id="dbStatus" class="flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin"></i>
                         正在加载数据库...</span>
                 </div>
                 <button onclick="startAnalysis()" id="scanBtn"
-                    class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                    class="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-sm">
                     <i class="fa-solid fa-microscope"></i> 开始诊断
                 </button>
             </div>
@@ -148,7 +224,7 @@ CPU: Intel Core Ultra 5 245KF
 
         <!-- 错误提示 -->
         <div id="errorArea"
-            class="hidden mt-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r shadow-sm relative">
+            class="hidden mt-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-300 px-4 py-3 rounded-r shadow-sm relative">
             <div class="flex items-start gap-3">
                 <i class="fa-solid fa-circle-exclamation mt-1"></i>
                 <div>
@@ -156,66 +232,71 @@ CPU: Intel Core Ultra 5 245KF
                     <span class="text-sm opacity-90" id="errorText"></span>
                 </div>
             </div>
-            <button class="absolute top-3 right-4 text-red-400 hover:text-red-700"
+            <button class="absolute top-3 right-4 text-red-400 hover:text-red-700 dark:hover:text-red-200"
                 onclick="document.getElementById('errorArea').classList.add('hidden')">
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
 
-        <!-- 结果展示区域 (重构核心) -->
+        <!-- 结果展示区域 -->
         <div id="resultArea" class="hidden mt-10 transition-all duration-700 opacity-0 transform translate-y-4">
 
             <!-- 第一层：总分与维度概览 -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
 
-                <!-- 左侧：总分卡片 (占4列) -->
+                <!-- 左侧：总分卡片 -->
                 <div
-                    class="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between relative overflow-hidden transition-colors">
                     <div
-                        class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none">
+                        class="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none">
                     </div>
 
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">综合评分</h3>
+                            <h3 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                综合评分</h3>
                             <div id="verdictBadge"
-                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-500">
+                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">
                                 --
                             </div>
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
-                            <span class="text-7xl font-black tracking-tighter text-slate-800"
+                            <span class="text-7xl font-black tracking-tighter text-slate-800 dark:text-slate-100"
                                 id="scoreDisplay">--</span>
-                            <span class="text-lg text-slate-400 font-medium">/ 150</span>
+                            <span class="text-lg text-slate-400 dark:text-slate-500 font-medium">/ 150</span>
                         </div>
 
-                        <!-- 偏好加分区域 (内容由JS动态控制) -->
+                        <!-- 偏好加分区域 -->
                         <div id="prefContainer" class="hidden mb-6 rounded-lg transition-all"></div>
 
                         <!-- 分数构成微注 -->
-                        <div class="mt-auto pt-4 border-t border-slate-100 text-[10px] text-slate-400 flex gap-4">
-                            <div><span class="w-2 h-2 rounded-full bg-slate-800 inline-block mr-1"></span>硬实力 (Max 120)
-                            </div>
+                        <div
+                            class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 text-[10px] text-slate-400 dark:text-slate-500 flex gap-4">
+                            <div><span
+                                    class="w-2 h-2 rounded-full bg-slate-800 dark:bg-slate-400 inline-block mr-1"></span>硬实力
+                                (Max 120)</div>
                             <div><span class="w-2 h-2 rounded-full bg-pink-500 inline-block mr-1"></span>偏好分 (Max 30)
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 右侧：四维分析 (占8列) -->
-                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">硬实力解构</h3>
+                <!-- 右侧：四维分析 -->
+                <div
+                    class="lg:col-span-7 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
+                    <h3 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">
+                        硬实力解构</h3>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                         <!-- 性能 -->
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="font-bold text-slate-700"><i
+                                <span class="font-bold text-slate-700 dark:text-slate-300"><i
                                         class="fa-solid fa-gauge-high mr-2 text-blue-500 w-4"></i>性能释放</span>
-                                <span class="font-bold text-slate-900" id="score-perf">--</span>
+                                <span class="font-bold text-slate-900 dark:text-white" id="score-perf">--</span>
                             </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div id="bar-perf" class="h-full bg-blue-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
@@ -223,11 +304,11 @@ CPU: Intel Core Ultra 5 245KF
                         <!-- 性价比 -->
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="font-bold text-slate-700"><i
+                                <span class="font-bold text-slate-700 dark:text-slate-300"><i
                                         class="fa-solid fa-coins mr-2 text-emerald-500 w-4"></i>性价比</span>
-                                <span class="font-bold text-slate-900" id="score-val">--</span>
+                                <span class="font-bold text-slate-900 dark:text-white" id="score-val">--</span>
                             </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div id="bar-val" class="h-full bg-emerald-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
@@ -235,11 +316,11 @@ CPU: Intel Core Ultra 5 245KF
                         <!-- 兼容性 -->
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="font-bold text-slate-700"><i
+                                <span class="font-bold text-slate-700 dark:text-slate-300"><i
                                         class="fa-solid fa-puzzle-piece mr-2 text-amber-500 w-4"></i>兼容性</span>
-                                <span class="font-bold text-slate-900" id="score-comp">--</span>
+                                <span class="font-bold text-slate-900 dark:text-white" id="score-comp">--</span>
                             </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div id="bar-comp" class="h-full bg-amber-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
@@ -247,18 +328,19 @@ CPU: Intel Core Ultra 5 245KF
                         <!-- 品质 -->
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="font-bold text-slate-700"><i
+                                <span class="font-bold text-slate-700 dark:text-slate-300"><i
                                         class="fa-solid fa-shield-halved mr-2 text-indigo-500 w-4"></i>品质/做工</span>
-                                <span class="font-bold text-slate-900" id="score-qual">--</span>
+                                <span class="font-bold text-slate-900 dark:text-white" id="score-qual">--</span>
                             </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div id="bar-qual" class="h-full bg-indigo-500 rounded-full progress-bar-fill"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 保留雷达图，但缩小并作为辅助 -->
-                    <div class="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center">
+                    <!-- 雷达图 -->
+                    <div
+                        class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 flex items-center justify-center">
                         <div
                             class="h-32 w-full flex items-center justify-center opacity-60 grayscale hover:grayscale-0 transition-all">
                             <canvas id="radarChart"></canvas>
@@ -271,13 +353,15 @@ CPU: Intel Core Ultra 5 245KF
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- 左侧：文字报告 -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-800"></div>
-                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 text-lg">
+                    <div
+                        class="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-800 dark:bg-slate-500"></div>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2 text-lg">
                             <i class="fa-solid fa-comment-dots text-slate-400"></i> AI 诊断综述
                         </h3>
+                        <!-- 内容区域：markdown-content 类已增强对列表的样式支持 -->
                         <div id="aiSummary"
-                            class="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed markdown-content">
+                            class="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-600 dark:text-slate-300 leading-relaxed markdown-content">
                             <!-- AI 文本内容 -->
                         </div>
                     </div>
@@ -285,7 +369,9 @@ CPU: Intel Core Ultra 5 245KF
 
                 <!-- 右侧：检测到的关键点 (Modules) -->
                 <div class="lg:col-span-1">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">详细检查项</h3>
+                    <h3
+                        class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                        详细检查项</h3>
                     <div id="aiModulesContainer" class="space-y-3">
                         <!-- 动态生成的模块卡片 -->
                     </div>
@@ -293,25 +379,63 @@ CPU: Intel Core Ultra 5 245KF
             </div>
 
             <div class="text-center mt-12 mb-8">
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB
-                </p>
+                <p class="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest">Powered by DeepSeek
+                    & Local Hardware DB</p>
             </div>
         </div>
     </main>
 
     <script>
+        // ==========================================
+        // 深色模式逻辑 (Theme Logic)
+        // ==========================================
+        function initTheme() {
+            // 1. 检查本地存储
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+            // 重新绘制图表以适应颜色变化
+            if (window.lastChartData) renderUI(window.lastChartData);
+        }
+
+        // 监听系统偏好变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (!localStorage.theme) { // 只有在用户未手动覆盖时才自动切换
+                if (e.matches) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+                if (window.lastChartData) renderUI(window.lastChartData);
+            }
+        });
+
+        // 初始化
+        initTheme();
+
+
+        // ==========================================
+        // 核心业务逻辑
+        // ==========================================
         window.addEventListener('load', function () {
             if (typeof HARDWARE_DB === 'undefined') {
                 console.error("Critical: hardware_data.js failed to load!");
                 document.getElementById('dbStatus').innerHTML = '<span class="text-red-500 font-bold">数据加载失败</span>';
             } else {
-                document.getElementById('dbStatus').innerHTML = '<span class="text-emerald-600 font-medium"><i class="fa-solid fa-check-circle"></i> 2025 DB Ready</span>';
+                document.getElementById('dbStatus').innerHTML = '<span class="text-emerald-600 dark:text-emerald-400 font-medium"><i class="fa-solid fa-check-circle"></i> 2025 DB Ready</span>';
             }
         });
 
-        // 简化的别名映射
         const ALIAS_MAP_KEYS = typeof ALIAS_MAP !== 'undefined' ? ALIAS_MAP : {};
-
         let radarChart = null;
 
         function extractHardwareContext(text) {
@@ -356,15 +480,15 @@ CPU: Intel Core Ultra 5 245KF
             if (contextItems.length > 0) {
                 detectedTags.innerHTML = contextItems.map(item => {
                     const name = item.split('|')[0].replace('[已识别]', '').trim();
-                    return `<span class="px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-blue-600 font-medium text-[10px] truncate max-w-[150px]">${name}</span>`;
+                    return `<span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 rounded text-blue-600 dark:text-blue-300 font-medium text-[10px] truncate max-w-[150px]">${name}</span>`;
                 }).join('');
                 detectedBar.classList.remove('hidden');
             } else {
-                detectedTags.innerHTML = `<span class="text-slate-400 text-[10px]">通用分析模式</span>`;
+                detectedTags.innerHTML = `<span class="text-slate-400 dark:text-slate-500 text-[10px]">通用分析模式</span>`;
                 detectedBar.classList.remove('hidden');
             }
 
-            // Prompt 保持逻辑：分离基础分与偏好分
+            // Prompt
             let systemPrompt = `
 你是一个专业的电脑硬件评估专家。
 任务：分析用户的配置单，计算评分并给出评价。
@@ -392,7 +516,7 @@ CPU: Intel Core Ultra 5 245KF
     "summary": "Markdown详细点评",
     "sub_scores": { "performance": number, "value": number, "compatibility": number, "quality": number },
     "is_preference_match": boolean,
-    "modules": [ { "type": "success/warning/danger", "title": "短标题", "content": "简练内容" } ]
+    "modules": [ { "type": "success/warning/danger", "title": "短标题", "content": "简练内容，建议按点列出" } ]
 }
 Context Data:
 ${contextItems.join('\n')}
@@ -430,22 +554,20 @@ ${contextItems.join('\n')}
         }
 
         function renderUI(data) {
+            window.lastChartData = data; // 保存数据以便切换主题时重绘
+
             const area = document.getElementById('resultArea');
             area.classList.remove('hidden');
-            // Trigger reflow
             void area.offsetWidth;
             area.classList.add('opacity-100', 'translate-y-0');
 
-            // 1. 核心分数区
             const finalScore = data.total_score !== undefined ? data.total_score : data.score;
-            const baseScore = data.base_score || finalScore;
 
             const scoreEl = document.getElementById('scoreDisplay');
             const verdictEl = document.getElementById('verdictBadge');
 
-            // 动态颜色
-            let scoreColorClass = finalScore >= 120 ? "text-emerald-600" : (finalScore >= 90 ? "text-blue-600" : (finalScore >= 60 ? "text-amber-500" : "text-red-500"));
-            let badgeClass = finalScore >= 120 ? "bg-emerald-100 text-emerald-700" : (finalScore >= 90 ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700");
+            let scoreColorClass = finalScore >= 120 ? "text-emerald-600 dark:text-emerald-400" : (finalScore >= 90 ? "text-blue-600 dark:text-blue-400" : (finalScore >= 60 ? "text-amber-500 dark:text-amber-400" : "text-red-500 dark:text-red-400"));
+            let badgeClass = finalScore >= 120 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : (finalScore >= 90 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300");
 
             scoreEl.className = `text-7xl font-black tracking-tighter ${scoreColorClass}`;
             scoreEl.innerText = finalScore;
@@ -453,41 +575,38 @@ ${contextItems.join('\n')}
             verdictEl.className = `px-3 py-1 rounded-md text-sm font-bold ml-auto ${badgeClass}`;
             verdictEl.innerText = data.verdict;
 
-            // 2. 偏好加分动态显示逻辑 (优化点)
+            // 偏好加分动态显示
             const prefContainer = document.getElementById('prefContainer');
-            prefContainer.classList.remove('hidden'); // 总是移除hidden
+            prefContainer.classList.remove('hidden');
 
             if (data.is_preference_match && data.preference_bonus > 0) {
-                // 有加分：高亮粉色样式
-                prefContainer.className = "mb-6 bg-pink-50 border border-pink-100 rounded-lg p-3 flex items-center gap-3 transition-all";
+                prefContainer.className = "mb-6 bg-pink-50 dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800 rounded-lg p-3 flex items-center gap-3 transition-all";
                 prefContainer.innerHTML = `
-                    <div class="bg-pink-100 text-pink-500 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                    <div class="bg-pink-100 dark:bg-pink-800/40 text-pink-500 dark:text-pink-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-heart"></i>
                     </div>
                     <div>
-                        <div class="text-xs text-pink-400 font-bold uppercase">偏好 Bonus</div>
-                        <div class="text-sm font-bold text-pink-600">
+                        <div class="text-xs text-pink-400 dark:text-pink-300 font-bold uppercase">偏好 Bonus</div>
+                        <div class="text-sm font-bold text-pink-600 dark:text-pink-400">
                             颜值/信仰加成 <span class="text-lg ml-1">+${data.preference_bonus}</span>
                         </div>
                     </div>`;
             } else {
-                // 无加分：淡灰色小字提醒
-                prefContainer.className = "mb-6 p-2 flex items-center gap-2 text-slate-400 opacity-60 hover:opacity-100 transition-opacity border border-transparent";
+                prefContainer.className = "mb-6 p-2 flex items-center gap-2 text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-100 transition-opacity border border-transparent";
                 prefContainer.innerHTML = `
-                    <div class="text-slate-300 text-xs"><i class="fa-regular fa-heart"></i></div>
+                    <div class="text-slate-300 dark:text-slate-600 text-xs"><i class="fa-regular fa-heart"></i></div>
                     <div class="text-[10px] font-medium">
-                        未检测到特殊偏好（如纯白/RGB），评分纯基于性能。
+                        未检测到特殊偏好，评分纯基于性能。
                     </div>`;
             }
 
-            // 3. 进度条动画
             const setBar = (id, score, max = 120) => {
                 const el = document.getElementById(id);
                 const textEl = document.getElementById(id.replace('bar-', 'score-'));
                 const percentage = Math.min((score / max) * 100, 100);
 
                 textEl.innerText = score;
-                el.style.width = '0%'; // reset
+                el.style.width = '0%';
                 setTimeout(() => { el.style.width = `${percentage}%`; }, 100);
             };
 
@@ -496,33 +615,38 @@ ${contextItems.join('\n')}
             setBar('bar-comp', data.sub_scores.compatibility);
             setBar('bar-qual', data.sub_scores.quality);
 
-            // 4. 诊断报告
+            // 诊断报告
             document.getElementById('aiSummary').innerHTML = marked.parse(data.summary);
 
-            // 5. 模块卡片
+            // 模块卡片：针对深色模式和内容换行的优化
             const modContainer = document.getElementById('aiModulesContainer');
             modContainer.innerHTML = '';
             if (data.modules) {
                 data.modules.forEach(m => {
                     const styles = {
-                        success: { icon: 'fa-check', color: 'text-emerald-600', border: 'border-l-4 border-l-emerald-500', bg: 'bg-white' },
-                        warning: { icon: 'fa-triangle-exclamation', color: 'text-amber-500', border: 'border-l-4 border-l-amber-500', bg: 'bg-white' },
-                        danger: { icon: 'fa-ban', color: 'text-red-500', border: 'border-l-4 border-l-red-500', bg: 'bg-red-50' }
-                    }[m.type] || { icon: 'fa-info', color: 'text-blue-500', border: 'border-l-4 border-l-blue-500', bg: 'bg-white' };
+                        success: { icon: 'fa-check', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-l-4 border-l-emerald-500', bg: 'bg-white dark:bg-slate-800' },
+                        warning: { icon: 'fa-triangle-exclamation', color: 'text-amber-500 dark:text-amber-400', border: 'border-l-4 border-l-amber-500', bg: 'bg-white dark:bg-slate-800' },
+                        danger: { icon: 'fa-ban', color: 'text-red-500 dark:text-red-400', border: 'border-l-4 border-l-red-500', bg: 'bg-red-50 dark:bg-red-900/10' }
+                    }[m.type] || { icon: 'fa-info', color: 'text-blue-500 dark:text-blue-400', border: 'border-l-4 border-l-blue-500', bg: 'bg-white dark:bg-slate-800' };
 
                     const div = document.createElement('div');
-                    div.className = `p-4 rounded-r-lg shadow-sm border-y border-r border-slate-100 ${styles.border} ${styles.bg} flex gap-3 transition-transform hover:translate-x-1`;
+                    div.className = `p-4 rounded-r-lg shadow-sm border-y border-r border-slate-100 dark:border-slate-700 ${styles.border} ${styles.bg} flex gap-3 transition-transform hover:translate-x-1`;
+                    // 注意：这里增加了 module-content 类
                     div.innerHTML = `
                         <div class="mt-0.5"><i class="fa-solid ${styles.icon} ${styles.color}"></i></div>
-                        <div>
-                            <h4 class="font-bold text-sm text-slate-800 leading-tight mb-1">${m.title}</h4>
-                            <div class="text-xs text-slate-500 leading-relaxed">${marked.parse(m.content)}</div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 leading-tight mb-1">${m.title}</h4>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 module-content">${marked.parse(m.content)}</div>
                         </div>`;
                     modContainer.appendChild(div);
                 });
             }
 
-            // 6. 雷达图 (辅助)
+            // 雷达图配置：适配深色模式
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0';
+            const pointColor = isDark ? '#60a5fa' : '#3b82f6'; // blue-400 vs blue-500
+
             if (radarChart) radarChart.destroy();
             const ctx = document.getElementById('radarChart').getContext('2d');
             radarChart = new Chart(ctx, {
@@ -536,7 +660,7 @@ ${contextItems.join('\n')}
                         borderColor: '#94a3b8',
                         borderWidth: 1,
                         pointRadius: 2,
-                        pointBackgroundColor: '#3b82f6'
+                        pointBackgroundColor: pointColor
                     }]
                 },
                 options: {
@@ -545,7 +669,9 @@ ${contextItems.join('\n')}
                             suggestedMin: 0,
                             suggestedMax: 120,
                             ticks: { display: false },
-                            grid: { color: '#e2e8f0' }
+                            grid: { color: gridColor },
+                            angleLines: { color: gridColor },
+                            pointLabels: { color: isDark ? '#94a3b8' : '#64748b' }
                         }
                     },
                     plugins: { legend: { display: false } }
