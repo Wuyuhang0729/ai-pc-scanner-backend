@@ -8,26 +8,18 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 1. 启用 Gzip 压缩
 app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// [新增] 强制全局禁用缓存中间件 (暴力模式)
-// 确保浏览器每次请求都必须从服务器获取最新内容，彻底杜绝 304 缓存
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    res.set('Surrogate-Control', 'no-store');
-    next();
-});
-
-// [修改] 静态资源服务配置
-// 配合上面的中间件，进一步关闭静态文件的 ETag 和 Last-Modified
+// [恢复] 静态资源服务配置
+// maxAge: '1d' - 允许浏览器缓存文件 1 天，大幅提升二次访问速度
+// etag/lastModified: true - 允许浏览器在缓存过期后向服务器询问"文件变了吗？"如果没变返回 304，不消耗带宽
 app.use(express.static(path.join(__dirname, 'public'), {
-    maxAge: '0',        // 立即过期
-    etag: false,        // 关闭 ETag 协商
-    lastModified: false // 关闭最后修改时间检查
+    maxAge: '1d',       
+    etag: true,        
+    lastModified: true 
 }));
 
 app.post('/api/analyze', async (req, res) => {
