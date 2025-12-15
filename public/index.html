@@ -34,7 +34,7 @@
             overflow-x: hidden;
         }
 
-        /* [质感纹理] 保持 image_ab6902.png 的高级质感 */
+        /* [质感纹理] */
         body::before {
             content: "";
             position: fixed;
@@ -55,22 +55,96 @@
 
         /* ================= 动态组件系统 (UI Kit) ================= */
 
+        /* [创意升级] 聚光灯卡片容器 */
+        .spotlight-group {
+            /* 用于 JS 捕获鼠标位置 */
+            position: relative;
+        }
+
         .ui-card {
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
             backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+            /* 限制光斑溢出 */
             transition: transform 0.4s var(--ease-out-quart),
                 box-shadow 0.4s var(--ease-out-quart),
                 background-color var(--duration-theme) var(--ease-out-quart),
                 border-color var(--duration-theme) var(--ease-out-quart);
         }
 
+        /* [创意升级] 聚光灯光斑层 - 默认隐藏，JS控制位置 */
+        .ui-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(255, 255, 255, 0.06),
+                    transparent 40%);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        /* 深色模式下的光斑更明显一点 */
+        html.dark .ui-card::before {
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),
+                    rgba(255, 255, 255, 0.08),
+                    transparent 40%);
+        }
+
+        /* 鼠标进入卡片组时显示光斑 */
+        .spotlight-group:hover .ui-card::before {
+            opacity: 1;
+        }
+
+        /* 边框高亮效果 - 通过伪元素叠加 */
+        .ui-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 1rem;
+            padding: 1px;
+            /* 边框宽度 */
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y),
+                    var(--c-primary-light),
+                    transparent 40%);
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-group:hover .ui-card::after {
+            opacity: 1;
+        }
+
+        /* 确保内容在光斑之上 */
+        .ui-card>* {
+            position: relative;
+            z-index: 10;
+        }
+
         .ui-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-2px) scale(1.002);
             box-shadow: var(--shadow-hover);
-            border-color: var(--c-primary-light);
+            /* 边框颜色由 spotlight 接管，这里可以淡化 */
+            border-color: transparent;
         }
 
         .ui-nav {
@@ -118,6 +192,26 @@
             box-shadow: 0 0 0 4px var(--c-focus-ring);
         }
 
+        /* [创意升级] 输入分析时的脉冲效果 */
+        @keyframes border-pulse {
+            0% {
+                border-color: var(--c-border);
+            }
+
+            50% {
+                border-color: var(--c-primary);
+                box-shadow: 0 0 15px var(--c-glow);
+            }
+
+            100% {
+                border-color: var(--c-border);
+            }
+        }
+
+        .ui-input-wrapper.analyzing {
+            animation: border-pulse 2s infinite ease-in-out;
+        }
+
         .ui-input-footer {
             background-color: var(--c-input-bg);
             border-top: 1px solid var(--c-border);
@@ -153,14 +247,32 @@
             box-shadow: none;
         }
 
+        /* [创意升级] 标签样式 + 解密动画占位 */
         .ui-tag {
             background-color: var(--c-input-bg);
             color: var(--c-text-mute);
             border: 1px solid var(--c-border);
             font-weight: 500;
-            transition: background-color var(--duration-theme) var(--ease-out-quart),
-                color var(--duration-theme) var(--ease-out-quart),
-                border-color var(--duration-theme) var(--ease-out-quart);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 标签出现时的微动画 */
+        .ui-tag-enter {
+            animation: tagPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes tagPop {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         /* ================= 辅助类 ================= */
@@ -179,15 +291,10 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* [优化] Markdown 增强排版：内容分隔与高亮 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 700;
-            background-color: var(--c-input-bg);
-            /* 荧光笔背景感 */
-            padding: 0 2px;
-            border-radius: 2px;
-            transition: all var(--duration-theme) var(--ease-out-quart);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .markdown-content p {
@@ -206,32 +313,16 @@
             margin-bottom: 0.5em;
         }
 
-        /* 标题下划线分隔 */
-        .markdown-content h3,
-        .markdown-content h2 {
-            font-size: 1.15em;
+        .markdown-content h3 {
+            font-size: 1.2em;
             font-weight: 800;
             margin-top: 1.5em;
-            margin-bottom: 0.8em;
+            margin-bottom: 0.75em;
             color: var(--c-text-head);
-            border-bottom: 1px dashed var(--c-border);
-            /* 虚线分隔 */
-            padding-bottom: 0.3em;
-            display: block;
-            transition: all var(--duration-theme) var(--ease-out-quart);
-        }
-
-        /* 引用块样式 */
-        .markdown-content blockquote {
-            border-left: 3px solid var(--c-primary);
-            padding-left: 1em;
-            margin-left: 0;
-            color: var(--c-text-mute);
-            font-style: italic;
-            background-color: var(--c-input-bg);
-            padding: 0.8em 1em;
-            border-radius: 0 0.5em 0.5em 0;
-            margin-bottom: 1em;
+            border-bottom: 2px solid var(--c-border);
+            padding-bottom: 0.25em;
+            display: inline-block;
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         .cursor-blink {
@@ -293,7 +384,6 @@
             transition: background-image var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* 评分规则 Tooltip 样式 */
         .rules-popover {
             position: absolute;
             top: 100%;
@@ -491,7 +581,7 @@
         </div>
 
         <!-- 输入区 -->
-        <div class="ui-input-wrapper shadow-lg animate-slide-up" style="animation-delay: 100ms;">
+        <div id="inputCard" class="ui-input-wrapper shadow-lg animate-slide-up" style="animation-delay: 100ms;">
             <textarea id="configInput" class="ui-input-transparent" placeholder="在此粘贴配置单...
 例：
 CPU: Intel Core Ultra 5 245KF
@@ -532,7 +622,8 @@ CPU: Intel Core Ultra 5 245KF
         </div>
 
         <!-- 结果展示区 -->
-        <div id="resultArea" class="hidden mt-10">
+        <!-- [创意升级] 添加 spotlight-group 类，启用鼠标聚光灯效果 -->
+        <div id="resultArea" class="hidden mt-10 spotlight-group">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- 1. 总分卡片 -->
@@ -660,7 +751,7 @@ CPU: Intel Core Ultra 5 245KF
                     class="prose prose-slate dark:prose-invert prose-lg max-w-none ui-heading leading-relaxed markdown-content">
                 </div>
 
-                <!-- [新增] 免责声明 -->
+                <!-- 免责声明 -->
                 <div class="mt-6 pt-4 border-t border-dashed" style="border-color: var(--c-border)">
                     <p class="text-[10px] ui-text-mute text-center opacity-70">
                         <i class="fa-solid fa-triangle-exclamation mr-1"></i> 内容由AI生成，分析结果可能不准确，请结合实际自行判断
@@ -815,8 +906,7 @@ CPU: Intel Core Ultra 5 245KF
                     options: {
                         scales: {
                             r: {
-                                // [修改] 刻度 Max 调整为 100，让高分配置溢出图表，视觉冲击更强
-                                suggestedMin: 0, suggestedMax: 100, ticks: { display: false },
+                                suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
                                 grid: { color: hexToRgba(mute, 0.1) },
                                 angleLines: { color: hexToRgba(mute, 0.1) },
                                 pointLabels: {
@@ -954,7 +1044,8 @@ CPU: Intel Core Ultra 5 245KF
             }
         }
 
-        // [核心功能] 标准流式打字机效果 (移除任何自定义的高亮逻辑)
+        // [前沿] 模拟流式打字机效果 (Simulated Streaming)
+        // 逐字解析 Markdown，增强 AI 的"思考感"
         function typeWriterEffect(text, elementId, speed = 15) {
             const el = document.getElementById(elementId);
             let i = 0;
@@ -1022,12 +1113,11 @@ CPU: Intel Core Ultra 5 245KF
                 prefContainer.classList.add('hidden');
             }
 
-            // [修改] 进度条分母调整为 100，让高分配置“爆表”
             const setBar = (id, score) => {
                 const el = document.getElementById(id);
                 document.getElementById(id.replace('bar-', 'score-')).innerText = score;
                 el.style.width = '0%';
-                setTimeout(() => { el.style.width = `${Math.min((score / 100) * 100, 100)}%`; }, 600);
+                setTimeout(() => { el.style.width = `${Math.min((score / 150) * 100, 100)}%`; }, 600);
             };
             setBar('bar-perf', data.sub_scores.performance);
             setBar('bar-val', data.sub_scores.value);
