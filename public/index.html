@@ -93,6 +93,8 @@
             line-height: 1.5;
             resize: none;
             outline: none;
+            /* [修改] 调整高度为原来的 1.5 倍 (10rem -> 15rem) */
+            height: 15rem;
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
@@ -180,7 +182,7 @@
             transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
-        /* Markdown 增强 */
+        /* [修改] Markdown 增强排版：增加间距，优化阅读体验 */
         .markdown-content strong {
             color: var(--c-primary);
             font-weight: 600;
@@ -188,14 +190,31 @@
         }
 
         .markdown-content p {
-            margin-bottom: 0.6em;
-            line-height: 1.6;
+            margin-bottom: 1em;
+            /* 增加段落间距 */
+            line-height: 1.75;
+            /* 增加行高 */
         }
 
         .markdown-content ul {
             list-style-type: disc;
-            padding-left: 1.2em;
+            padding-left: 1.5em;
+            margin-bottom: 1em;
             color: var(--c-text-mute);
+        }
+
+        .markdown-content li {
+            margin-bottom: 0.5em;
+            /* 列表项增加间距 */
+        }
+
+        .markdown-content h3 {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: 0.75em;
+            color: var(--c-text-head);
+            transition: color var(--duration-theme) var(--ease-out-quart);
         }
 
         /* [前沿] 打字机光标效果 */
