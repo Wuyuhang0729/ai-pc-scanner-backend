@@ -6,16 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 装机诊断室 - 硬件配置深度评估</title>
     <link rel="dns-prefetch" href="https://api.deepseek.com">
-
+    
     <!-- 基础库 -->
     <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <!-- 引入 CountUp.js 用于数字滚动 -->
-    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js"></script> 
     <script src="hardware_data.js" defer></script>
 
     <!-- 
@@ -30,12 +29,12 @@
             background-color: var(--c-page-bg);
             color: var(--c-text-main);
             /* 关键：让颜色变化平滑，但不要太慢 */
-            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* ================= 组件微交互 (Micro-interactions) ================= */
-
+        
         /* 1. 物理感卡片 */
         .ui-card {
             background-color: var(--c-card-bg);
@@ -43,19 +42,16 @@
             box-shadow: var(--shadow-sm);
             border-radius: 1rem;
             /* 复合变换：位置+阴影+边框 */
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.3s ease,
-                border-color 0.3s ease,
-                background-color 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        box-shadow 0.3s ease, 
+                        border-color 0.3s ease,
+                        background-color 0.3s ease;
         }
-
+        
         .ui-card:hover {
-            transform: translateY(-4px);
-            /* 悬浮抬起 */
-            box-shadow: var(--shadow-hover);
-            /* 阴影加深 */
-            border-color: var(--c-primary-light);
-            /* 边框微亮 */
+            transform: translateY(-4px); /* 悬浮抬起 */
+            box-shadow: var(--shadow-hover); /* 阴影加深 */
+            border-color: var(--c-primary-light); /* 边框微亮 */
         }
 
         /* 2. 呼吸感输入框 */
@@ -66,19 +62,13 @@
             border-radius: 0.75rem;
             transition: all 0.3s ease-out;
         }
-
         .ui-input:focus {
             border-color: var(--c-primary);
             background-color: var(--c-card-bg);
-            box-shadow: 0 0 0 4px var(--c-focus-ring);
-            /* 柔和光晕 */
+            box-shadow: 0 0 0 4px var(--c-focus-ring); /* 柔和光晕 */
             outline: none;
         }
-
-        .ui-input::placeholder {
-            color: var(--c-text-mute);
-            opacity: 0.6;
-        }
+        .ui-input::placeholder { color: var(--c-text-mute); opacity: 0.6; }
 
         /* 3. 按钮点击反馈 */
         .ui-btn-primary {
@@ -91,18 +81,15 @@
             position: relative;
             overflow: hidden;
         }
-
         .ui-btn-primary:hover {
             background-color: var(--c-primary-hover);
             transform: translateY(-1px);
             box-shadow: var(--shadow-hover);
         }
-
         .ui-btn-primary:active {
             transform: translateY(1px);
             box-shadow: none;
         }
-
         .ui-btn-primary:disabled {
             background-color: var(--c-border);
             color: var(--c-text-mute);
@@ -112,7 +99,7 @@
         }
 
         /* ================= 电影感入场动画 (Cinematic Reveal) ================= */
-
+        
         /* 基础隐藏状态 */
         .reveal-hidden {
             opacity: 0;
@@ -121,22 +108,10 @@
 
         /* 1. 弹跳入场 (Pop Up) - 用于总分卡片 */
         @keyframes popUp {
-            0% {
-                opacity: 0;
-                transform: scale(0.9) translateY(20px);
-            }
-
-            60% {
-                opacity: 1;
-                transform: scale(1.02) translateY(-5px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+            60% { opacity: 1; transform: scale(1.02) translateY(-5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
-
         .animate-pop-up {
             animation: popUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             visibility: visible;
@@ -144,17 +119,9 @@
 
         /* 2. 展开入场 (Scale Unfold) - 用于雷达图 */
         @keyframes unfold {
-            0% {
-                opacity: 0;
-                transform: scaleY(0.8);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scaleY(1);
-            }
+            0% { opacity: 0; transform: scaleY(0.8); }
+            100% { opacity: 1; transform: scaleY(1); }
         }
-
         .animate-unfold {
             animation: unfold 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
             visibility: visible;
@@ -162,175 +129,61 @@
 
         /* 3. 滑动入场 (Slide Up) - 用于列表项 */
         @keyframes slideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
-
         .animate-slide-up {
             animation: slideUp 0.5s ease-out forwards;
             visibility: visible;
         }
 
         /* 延迟类 Utility */
-        .delay-100 {
-            animation-delay: 100ms;
-        }
-
-        .delay-200 {
-            animation-delay: 200ms;
-        }
-
-        .delay-300 {
-            animation-delay: 300ms;
-        }
-
-        .delay-400 {
-            animation-delay: 400ms;
-        }
-
-        .delay-500 {
-            animation-delay: 500ms;
-        }
-
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        
         /* 列表项交错动画生成 (支持到 10 个项目) */
-        .stagger-item:nth-child(1) {
-            animation-delay: 400ms;
-        }
-
-        .stagger-item:nth-child(2) {
-            animation-delay: 500ms;
-        }
-
-        .stagger-item:nth-child(3) {
-            animation-delay: 600ms;
-        }
-
-        .stagger-item:nth-child(4) {
-            animation-delay: 700ms;
-        }
-
-        .stagger-item:nth-child(5) {
-            animation-delay: 800ms;
-        }
+        .stagger-item:nth-child(1) { animation-delay: 400ms; }
+        .stagger-item:nth-child(2) { animation-delay: 500ms; }
+        .stagger-item:nth-child(3) { animation-delay: 600ms; }
+        .stagger-item:nth-child(4) { animation-delay: 700ms; }
+        .stagger-item:nth-child(5) { animation-delay: 800ms; }
 
         /* ================= 辅助类 ================= */
-        .ui-nav {
-            background-color: var(--c-nav-bg);
-            border-bottom: 1px solid var(--c-border);
-            backdrop-filter: blur(12px);
-        }
-
-        .ui-tag {
-            background-color: var(--c-input-bg);
-            color: var(--c-text-mute);
-            border: 1px solid var(--c-border);
-            font-weight: 500;
-        }
-
-        .ui-heading {
-            color: var(--c-text-head);
-        }
-
-        .ui-text-highlight {
-            color: var(--c-primary);
-        }
-
-        .ui-text-mute {
-            color: var(--c-text-mute);
-        }
-
+        .ui-nav { background-color: var(--c-nav-bg); border-bottom: 1px solid var(--c-border); backdrop-filter: blur(12px); }
+        .ui-tag { background-color: var(--c-input-bg); color: var(--c-text-mute); border: 1px solid var(--c-border); font-weight: 500; }
+        .ui-heading { color: var(--c-text-head); }
+        .ui-text-highlight { color: var(--c-primary); }
+        .ui-text-mute { color: var(--c-text-mute); }
+        
         /* Markdown 适配 */
-        .markdown-content strong {
-            color: var(--c-primary);
-            font-weight: 600;
-        }
-
-        .markdown-content p {
-            margin-bottom: 0.6em;
-            line-height: 1.6;
-        }
-
-        .markdown-content ul {
-            list-style-type: disc;
-            padding-left: 1.2em;
-            color: var(--c-text-mute);
-        }
+        .markdown-content strong { color: var(--c-primary); font-weight: 600; }
+        .markdown-content p { margin-bottom: 0.6em; line-height: 1.6; }
+        .markdown-content ul { list-style-type: disc; padding-left: 1.2em; color: var(--c-text-mute); }
 
         /* 进度条 */
-        .progress-track {
-            background-color: var(--c-border);
-            border-radius: 99px;
-            height: 0.5rem;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
-            background-color: var(--c-primary);
-        }
+        .progress-track { background-color: var(--c-border); border-radius: 99px; height: 0.5rem; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); background-color: var(--c-primary); }
 
         /* 状态色映射 */
-        .state-success {
-            background: var(--s-success-bg);
-            border-color: var(--s-success-border);
-            color: var(--s-success-text);
-        }
-
-        .state-warning {
-            background: var(--s-warning-bg);
-            border-color: var(--s-warning-border);
-            color: var(--s-warning-text);
-        }
-
-        .state-danger {
-            background: var(--s-danger-bg);
-            border-color: var(--s-danger-border);
-            color: var(--s-danger-text);
-        }
-
-        .state-info {
-            background: var(--c-input-bg);
-            border-color: var(--c-border);
-            color: var(--c-text-main);
-        }
+        .state-success { background: var(--s-success-bg); border-color: var(--s-success-border); color: var(--s-success-text); }
+        .state-warning { background: var(--s-warning-bg); border-color: var(--s-warning-border); color: var(--s-warning-text); }
+        .state-danger  { background: var(--s-danger-bg);  border-color: var(--s-danger-border);  color: var(--s-danger-text); }
+        .state-info    { background: var(--c-input-bg);   border-color: var(--c-border);         color: var(--c-text-main); }
 
         /* 装饰背景 */
-        .summary-window {
-            background-image: radial-gradient(circle at top right, var(--c-glow), transparent 70%);
-        }
-
+        .summary-window { background-image: radial-gradient(circle at top right, var(--c-glow), transparent 70%); }
+        
         /* Loading 动画 */
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-spin {
-            animation: spin 1s linear infinite;
-        }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-spin { animation: spin 1s linear infinite; }
+        
         /* 滚动条 */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--c-border);
-            border-radius: 3px;
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
     </style>
 </head>
 
@@ -344,14 +197,11 @@
                     <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
                         <i class="fa-solid fa-microchip text-lg"></i>
                     </div>
-                    <h1 class="text-xl font-bold ui-heading tracking-tight">AI 装机<span
-                            class="ui-text-highlight">诊断室</span></h1>
+                    <h1 class="text-xl font-bold ui-heading tracking-tight">AI 装机<span class="ui-text-highlight">诊断室</span></h1>
                 </div>
-
+                
                 <!-- 主题切换按钮 -->
-                <button id="themeToggleBtn"
-                    class="w-9 h-9 flex items-center justify-center rounded-full border border-transparent hover:border-current transition-all text-slate-400 hover:text-blue-500"
-                    aria-label="切换模式">
+                <button id="themeToggleBtn" class="w-9 h-9 flex items-center justify-center rounded-full border border-transparent hover:border-current transition-all text-slate-400 hover:text-blue-500" aria-label="切换模式">
                     <i class="fa-solid fa-sun dark:hidden"></i>
                     <i class="fa-solid fa-moon hidden dark:block"></i>
                 </button>
@@ -389,18 +239,14 @@ CPU: Intel Core Ultra 5 245KF
 内存: 32G DDR5 6000MHz
 硬盘: Samsung 9100 PRO 2TB"></textarea>
 
-            <div id="detectedHardwareBar"
-                class="hidden border-t px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors"
-                style="border-color: var(--c-border); background-color: var(--c-input-bg);">
+            <div id="detectedHardwareBar" class="hidden border-t px-6 py-2 flex flex-wrap items-center gap-2 min-h-[40px] transition-colors" style="border-color: var(--c-border); background-color: var(--c-input-bg);">
                 <span class="text-[10px] font-bold ui-text-mute uppercase tracking-wider mr-2">Detected:</span>
                 <div id="detectedTags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="p-4 border-t flex justify-between items-center"
-                style="border-color: var(--c-border); background-color: var(--c-card-bg);">
+            <div class="p-4 border-t flex justify-between items-center" style="border-color: var(--c-border); background-color: var(--c-card-bg);">
                 <div class="text-xs ui-text-mute flex items-center gap-2">
-                    <span id="dbStatus" class="flex items-center gap-1.5"><i
-                            class="fa-solid fa-spinner loading-spin"></i> 正在加载数据库...</span>
+                    <span id="dbStatus" class="flex items-center gap-1.5"><i class="fa-solid fa-spinner loading-spin"></i> 正在加载数据库...</span>
                 </div>
                 <button onclick="startAnalysis()" id="scanBtn"
                     class="ui-btn-primary py-2.5 px-8 flex items-center gap-2 text-sm min-w-[140px] justify-center">
@@ -409,32 +255,27 @@ CPU: Intel Core Ultra 5 245KF
             </div>
         </div>
 
-        <div id="errorArea"
-            class="hidden mt-6 state-danger p-4 rounded-xl shadow-sm relative flex items-start gap-3 animate-slide-up">
+        <div id="errorArea" class="hidden mt-6 state-danger p-4 rounded-xl shadow-sm relative flex items-start gap-3 animate-slide-up">
             <i class="fa-solid fa-circle-exclamation mt-1"></i>
             <div>
                 <strong class="font-bold block mb-1">分析中断</strong>
                 <span class="text-sm opacity-90" id="errorText"></span>
             </div>
-            <button class="absolute top-3 right-4 opacity-60 hover:opacity-100"
-                onclick="document.getElementById('errorArea').classList.add('hidden')">
+            <button class="absolute top-3 right-4 opacity-60 hover:opacity-100" onclick="document.getElementById('errorArea').classList.add('hidden')">
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
 
         <!-- 结果展示区 -->
         <div id="resultArea" class="hidden mt-10">
-
+            
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- 1. 总分卡片 (Pop Up) -->
-                <div id="card-score"
-                    class="reveal-hidden lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
+                <div id="card-score" class="reveal-hidden lg:col-span-4 ui-card p-6 flex flex-col justify-between relative overflow-hidden summary-window">
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-xs font-bold ui-text-mute uppercase tracking-widest">综合评分</h3>
-                            <div id="verdictBadge"
-                                class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 ui-text-mute transition-colors">
-                                --</div>
+                            <div id="verdictBadge" class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 ui-text-mute transition-colors">--</div>
                         </div>
 
                         <div class="flex items-baseline gap-1 mt-2 mb-6">
@@ -445,12 +286,9 @@ CPU: Intel Core Ultra 5 245KF
 
                         <div id="prefContainer" class="hidden mb-6"></div>
 
-                        <div class="mt-auto pt-4 border-t text-[10px] ui-text-mute flex gap-4"
-                            style="border-color: var(--c-border)">
-                            <div class="flex items-center"><span
-                                    class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block mr-1.5"></span>客观性能</div>
-                            <div class="flex items-center"><span class="w-1.5 h-1.5 rounded-full inline-block mr-1.5"
-                                    style="background-color: var(--c-primary)"></span>偏好加成</div>
+                        <div class="mt-auto pt-4 border-t text-[10px] ui-text-mute flex gap-4" style="border-color: var(--c-border)">
+                            <div class="flex items-center"><span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block mr-1.5"></span>客观性能</div>
+                            <div class="flex items-center"><span class="w-1.5 h-1.5 rounded-full inline-block mr-1.5" style="background-color: var(--c-primary)"></span>偏好加成</div>
                         </div>
                     </div>
                 </div>
@@ -461,43 +299,31 @@ CPU: Intel Core Ultra 5 245KF
                         <!-- 动态生成的进度条 -->
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
-                                <span class="font-bold ui-text-mute"><i
-                                        class="fa-solid fa-gauge-high mr-1.5 ui-text-highlight"></i>性能释放</span>
+                                <span class="font-bold ui-text-mute"><i class="fa-solid fa-gauge-high mr-1.5 ui-text-highlight"></i>性能释放</span>
                                 <span class="font-bold ui-heading" id="score-perf">--</span>
                             </div>
-                            <div class="progress-track">
-                                <div id="bar-perf" class="progress-fill"></div>
-                            </div>
+                            <div class="progress-track"><div id="bar-perf" class="progress-fill"></div></div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
-                                <span class="font-bold ui-text-mute"><i
-                                        class="fa-solid fa-coins mr-1.5 ui-text-highlight"></i>性价比</span>
+                                <span class="font-bold ui-text-mute"><i class="fa-solid fa-coins mr-1.5 ui-text-highlight"></i>性价比</span>
                                 <span class="font-bold ui-heading" id="score-val">--</span>
                             </div>
-                            <div class="progress-track">
-                                <div id="bar-val" class="progress-fill"></div>
-                            </div>
+                            <div class="progress-track"><div id="bar-val" class="progress-fill"></div></div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
-                                <span class="font-bold ui-text-mute"><i
-                                        class="fa-solid fa-puzzle-piece mr-1.5 ui-text-highlight"></i>兼容性</span>
+                                <span class="font-bold ui-text-mute"><i class="fa-solid fa-puzzle-piece mr-1.5 ui-text-highlight"></i>兼容性</span>
                                 <span class="font-bold ui-heading" id="score-comp">--</span>
                             </div>
-                            <div class="progress-track">
-                                <div id="bar-comp" class="progress-fill"></div>
-                            </div>
+                            <div class="progress-track"><div id="bar-comp" class="progress-fill"></div></div>
                         </div>
                         <div>
                             <div class="flex justify-between text-xs mb-1.5">
-                                <span class="font-bold ui-text-mute"><i
-                                        class="fa-solid fa-shield-halved mr-1.5 ui-text-highlight"></i>品质/做工</span>
+                                <span class="font-bold ui-text-mute"><i class="fa-solid fa-shield-halved mr-1.5 ui-text-highlight"></i>品质/做工</span>
                                 <span class="font-bold ui-heading" id="score-qual">--</span>
                             </div>
-                            <div class="progress-track">
-                                <div id="bar-qual" class="progress-fill"></div>
-                            </div>
+                            <div class="progress-track"><div id="bar-qual" class="progress-fill"></div></div>
                         </div>
                     </div>
 
@@ -512,8 +338,7 @@ CPU: Intel Core Ultra 5 245KF
             <!-- 3. 诊断结论 (Slide Up) -->
             <div id="card-summary" class="reveal-hidden mb-6 ui-card p-8 summary-window">
                 <div class="flex items-center gap-3 mb-4 pb-4 border-b" style="border-color: var(--c-border)">
-                    <div
-                        class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
+                    <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 w-10 h-10 rounded-full flex items-center justify-center">
                         <i class="fa-solid fa-user-doctor text-xl"></i>
                     </div>
                     <div>
@@ -521,23 +346,19 @@ CPU: Intel Core Ultra 5 245KF
                         <p class="text-xs ui-text-mute uppercase tracking-widest font-bold">Comprehensive Analysis</p>
                     </div>
                 </div>
-                <div id="aiSummary"
-                    class="prose prose-slate dark:prose-invert prose-lg max-w-none ui-heading leading-relaxed markdown-content">
-                </div>
+                <div id="aiSummary" class="prose prose-slate dark:prose-invert prose-lg max-w-none ui-heading leading-relaxed markdown-content"></div>
             </div>
 
             <!-- 4. 详细模块 (Staggered Slide) -->
             <div>
-                <h3 id="modules-title"
-                    class="reveal-hidden text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
+                <h3 id="modules-title" class="reveal-hidden text-xs font-bold ui-text-mute uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i> 详细检查项目
                 </h3>
                 <div id="aiModulesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
 
             <div class="text-center mt-12 mb-8 reveal-hidden" id="footer-text">
-                <p class="text-[10px] ui-text-mute uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB
-                </p>
+                <p class="text-[10px] ui-text-mute uppercase tracking-widest">Powered by DeepSeek & Local Hardware DB</p>
             </div>
         </div>
     </main>
@@ -553,14 +374,14 @@ CPU: Intel Core Ultra 5 245KF
                 pageBg: '#f0f4f8',          // 极淡蓝灰
                 cardBg: '#ffffff',          // 纯白
                 navBg: 'rgba(255, 255, 255, 0.9)',
-
+                
                 textMain: '#334155',        // Slate-700
                 textHead: '#1e293b',        // Slate-800
                 textMute: '#64748b',        // Slate-500
                 primary: '#2563eb',         // Blue-600
                 primaryHover: '#1d4ed8',    // Blue-700
                 primaryLight: '#dbeafe',    // Blue-100 (边框高亮用)
-
+                
                 border: '#e2e8f0',          // Slate-200
                 inputBg: '#f8fafc',         // Slate-50
                 focusRing: 'rgba(37, 99, 235, 0.15)',
@@ -573,9 +394,9 @@ CPU: Intel Core Ultra 5 245KF
                 // 状态色 (背景/文字/边框)
                 successBg: '#ecfdf5', successText: '#059669', successBorder: '#d1fae5',
                 warningBg: '#fffbeb', warningText: '#b45309', warningBorder: '#fef3c7',
-                dangerBg: '#fff1f2', dangerText: '#be123c', dangerBorder: '#ffe4e6',
-                infoBg: '#f8fafc', infoText: '#334155', infoBorder: '#e2e8f0',
-
+                dangerBg: '#fff1f2',  dangerText: '#be123c',  dangerBorder: '#ffe4e6',
+                infoBg: '#f8fafc',    infoText: '#334155',    infoBorder: '#e2e8f0',
+                
                 // 偏好加成 (Indigo)
                 bonusBg: '#e0e7ff', bonusText: '#3730a3', bonusBorder: '#c7d2fe'
             },
@@ -583,14 +404,14 @@ CPU: Intel Core Ultra 5 245KF
                 pageBg: '#0f172a',          // Slate-900 (Deep Blue)
                 cardBg: '#1e293b',          // Slate-800
                 navBg: 'rgba(15, 23, 42, 0.9)',
-
+                
                 textMain: '#cbd5e1',        // Slate-300
                 textHead: '#f1f5f9',        // Slate-100
                 textMute: '#94a3b8',        // Slate-400
                 primary: '#60a5fa',         // Blue-400 (Lighter for dark mode)
                 primaryHover: '#3b82f6',    // Blue-500
                 primaryLight: '#334155',    // Slate-700
-
+                
                 border: '#334155',          // Slate-700
                 inputBg: '#0f172a',         // Match page bg
                 focusRing: 'rgba(96, 165, 250, 0.2)',
@@ -603,8 +424,8 @@ CPU: Intel Core Ultra 5 245KF
                 // 状态色 (背景更深，文字更亮)
                 successBg: '#064e3b', successText: '#6ee7b7', successBorder: '#065f46',
                 warningBg: '#451a03', warningText: '#fcd34d', warningBorder: '#78350f',
-                dangerBg: '#4c0519', dangerText: '#fda4af', dangerBorder: '#881337',
-                infoBg: '#1e293b', infoText: '#cbd5e1', infoBorder: '#334155',
+                dangerBg: '#4c0519',  dangerText: '#fda4af',  dangerBorder: '#881337',
+                infoBg: '#1e293b',    infoText: '#cbd5e1',    infoBorder: '#334155',
 
                 // 偏好加成
                 bonusBg: '#312e81', bonusText: '#c7d2fe', bonusBorder: '#4338ca'
@@ -613,13 +434,13 @@ CPU: Intel Core Ultra 5 245KF
 
         const ThemeManager = {
             currentMode: 'light',
-
+            
             init() {
                 const stored = localStorage.getItem('theme');
                 const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const h = new Date().getHours();
                 this.setMode(stored ? stored : (sysDark ? 'dark' : (h >= 18 || h < 6 ? 'dark' : 'light')));
-
+                
                 document.getElementById('themeToggleBtn').onclick = () => this.toggle();
             },
 
@@ -630,7 +451,7 @@ CPU: Intel Core Ultra 5 245KF
             setMode(mode) {
                 this.currentMode = mode;
                 localStorage.setItem('theme', mode);
-
+                
                 // 1. 设置 HTML 类 (用于 Tailwind 工具类兜底)
                 if (mode === 'dark') document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
@@ -638,7 +459,7 @@ CPU: Intel Core Ultra 5 245KF
                 // 2. 注入 CSS 变量 (Core)
                 const colors = COLOR_CONFIG[mode];
                 const root = document.documentElement;
-
+                
                 // 映射 Config 到 CSS Variables
                 const mapping = {
                     '--c-page-bg': colors.pageBg,
@@ -656,12 +477,12 @@ CPU: Intel Core Ultra 5 245KF
                     '--c-glow': colors.glow,
                     '--shadow-sm': colors.shadowSm,
                     '--shadow-hover': colors.shadowHover,
-
+                    
                     '--s-success-bg': colors.successBg, '--s-success-text': colors.successText, '--s-success-border': colors.successBorder,
                     '--s-warning-bg': colors.warningBg, '--s-warning-text': colors.warningText, '--s-warning-border': colors.warningBorder,
-                    '--s-danger-bg': colors.dangerBg, '--s-danger-text': colors.dangerText, '--s-danger-border': colors.dangerBorder,
-                    '--s-info-bg': colors.infoBg, '--s-info-text': colors.infoText, '--s-info-border': colors.infoBorder,
-                    '--s-bonus-bg': colors.bonusBg, '--s-bonus-text': colors.bonusText, '--s-bonus-border': colors.bonusBorder
+                    '--s-danger-bg': colors.dangerBg,   '--s-danger-text': colors.dangerText,   '--s-danger-border': colors.dangerBorder,
+                    '--s-info-bg': colors.infoBg,       '--s-info-text': colors.infoText,       '--s-info-border': colors.infoBorder,
+                    '--s-bonus-bg': colors.bonusBg,     '--s-bonus-text': colors.bonusText,     '--s-bonus-border': colors.bonusBorder
                 };
 
                 for (const [key, value] of Object.entries(mapping)) {
@@ -671,17 +492,17 @@ CPU: Intel Core Ultra 5 245KF
                 // 3. 通知图表更新
                 if (window.ChartManager) ChartManager.handleThemeChange(mode);
             },
-
+            
             getColors() { return COLOR_CONFIG[this.currentMode]; }
         };
 
         const ChartManager = {
             chartInstance: null,
-
+            
             init() {
                 // 等待 ThemeManager 就绪
             },
-
+            
             getFontSize() { return window.innerWidth < 640 ? 8 : 10; },
 
             createOrUpdate(data) {
@@ -691,7 +512,7 @@ CPU: Intel Core Ultra 5 245KF
 
                 this.currentData = data;
                 if (this.chartInstance) this.chartInstance.destroy();
-
+                
                 // 将 Hex 转为 RGB 供透明度使用
                 const hexToRgba = (hex, alpha) => {
                     const r = parseInt(hex.slice(1, 3), 16);
@@ -721,9 +542,9 @@ CPU: Intel Core Ultra 5 245KF
                                 suggestedMin: 0, suggestedMax: 150, ticks: { display: false },
                                 grid: { color: hexToRgba(colors.textMute, 0.1) },
                                 angleLines: { color: hexToRgba(colors.textMute, 0.1) },
-                                pointLabels: {
-                                    color: colors.textMute,
-                                    font: { size: fontSize, family: "'Noto Sans SC', sans-serif" }
+                                pointLabels: { 
+                                    color: colors.textMute, 
+                                    font: { size: fontSize, family: "'Noto Sans SC', sans-serif" } 
                                 }
                             }
                         },
@@ -732,7 +553,7 @@ CPU: Intel Core Ultra 5 245KF
                     }
                 });
             },
-
+            
             handleThemeChange(mode) {
                 if (this.chartInstance && this.currentData) {
                     this.createOrUpdate(this.currentData);
@@ -744,7 +565,7 @@ CPU: Intel Core Ultra 5 245KF
         window.addEventListener('load', function () {
             ThemeManager.init(); // 启动主题引擎
             ChartManager.init();
-
+            
             if (typeof HARDWARE_DB === 'undefined') {
                 console.error("Critical: hardware_data.js failed to load!");
                 document.getElementById('dbStatus').innerHTML = '<span class="state-danger px-2 py-0.5 rounded text-xs">Data Error</span>';
@@ -755,11 +576,11 @@ CPU: Intel Core Ultra 5 245KF
 
         // 简单的输入即识别 (Real-time Perception)
         const ALIAS_MAP_KEYS = typeof ALIAS_MAP !== 'undefined' ? ALIAS_MAP : {};
-        document.getElementById('configInput').addEventListener('input', function (e) {
+        document.getElementById('configInput').addEventListener('input', function(e) {
             const text = e.target.value;
             const detectedBar = document.getElementById('detectedHardwareBar');
             const detectedTags = document.getElementById('detectedTags');
-
+            
             if (text.length < 5) {
                 detectedBar.classList.add('hidden');
                 return;
@@ -798,15 +619,15 @@ CPU: Intel Core Ultra 5 245KF
         async function startAnalysis() {
             const input = document.getElementById('configInput').value.trim();
             if (input.length < 2) return alert("请粘贴配置单内容");
-
+            
             const btn = document.getElementById('scanBtn');
             const resultArea = document.getElementById('resultArea');
-
+            
             // 重置状态
             resultArea.classList.add('hidden');
             // 隐藏所有子元素以备动画
             document.querySelectorAll('#resultArea > div').forEach(el => el.classList.add('reveal-hidden'));
-
+            
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch loading-spin"></i> 分析中...';
 
@@ -823,10 +644,10 @@ CPU: Intel Core Ultra 5 245KF
                 const data = await response.json();
                 let contentStr = data.choices?.[0]?.message?.content || data.message?.content || JSON.stringify(data);
                 const jsonStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
-
+                
                 // 开始渲染 UI (包含动画序列)
                 renderUI(JSON.parse(jsonStr));
-
+                
             } catch (error) {
                 console.error("Analysis Error:", error);
                 document.getElementById('errorText').innerText = "服务暂时不可用，请稍后重试。";
@@ -839,13 +660,13 @@ CPU: Intel Core Ultra 5 245KF
 
         function renderUI(data) {
             const resultArea = document.getElementById('resultArea');
-
+            
             // 1. 显示大容器
             resultArea.classList.remove('hidden');
-
+            
             // ================= 数据填充 =================
             const finalScore = data.total_score !== undefined ? data.total_score : data.score;
-
+            
             // 数字滚动动画
             if (window.CountUp) {
                 const countUp = new CountUp('scoreDisplay', finalScore, { duration: 2.5 });
@@ -904,7 +725,7 @@ CPU: Intel Core Ultra 5 245KF
                     const stateClass = {
                         success: 'state-success', warning: 'state-warning', danger: 'state-danger'
                     }[m.type] || 'state-info';
-
+                    
                     const icon = {
                         success: 'fa-check-circle', warning: 'fa-triangle-exclamation', danger: 'fa-circle-xmark'
                     }[m.type] || 'fa-circle-info';
@@ -914,7 +735,7 @@ CPU: Intel Core Ultra 5 245KF
                     div.className = `p-4 rounded-lg shadow-sm border ${stateClass} flex gap-3 transition-all hover:-translate-y-1 stagger-item animate-slide-up reveal-hidden`;
                     // 动态计算延迟
                     div.style.animationDelay = `${600 + (index * 100)}ms`;
-
+                    
                     div.innerHTML = `
                         <div class="mt-0.5 shrink-0"><i class="fa-solid ${icon}"></i></div>
                         <div class="min-w-0">
@@ -954,10 +775,10 @@ CPU: Intel Core Ultra 5 245KF
                 setTimeout(() => {
                     document.getElementById('modules-title').classList.remove('reveal-hidden');
                     document.getElementById('modules-title').classList.add('animate-slide-up');
-
+                    
                     document.getElementById('footer-text').classList.remove('reveal-hidden');
                     document.getElementById('footer-text').classList.add('animate-slide-up');
-
+                    
                     // 模块本身的动画由 CSS animation-delay 控制，只需要移除 hidden 类
                     document.querySelectorAll('.stagger-item').forEach(el => el.classList.remove('reveal-hidden'));
                 }, 600);
@@ -965,5 +786,4 @@ CPU: Intel Core Ultra 5 245KF
         }
     </script>
 </body>
-
 </html>
