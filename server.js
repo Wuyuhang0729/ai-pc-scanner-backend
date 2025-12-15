@@ -59,7 +59,7 @@ const generateSystemPrompt = (contextData) => `
 * **品质/做工 (Quality)**：一线品牌 vs 杂牌，金牌电源 vs 炸弹电源。
 
 ## 输出要求 (JSON Schema)
-必须严格返回以下 JSON 格式，**严禁**包含 markdown 代码块标记（如 \`\`\`json）：
+必须严格返回以下 JSON 格式，**严禁**包含 markdown 代码块标记（如 \`\`\`json）和表情：
 {
     "total_score": number, // base_score + preference_bonus
     "base_score": number, // 0-150
