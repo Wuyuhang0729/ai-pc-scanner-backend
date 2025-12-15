@@ -28,7 +28,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
  * 3. 鲜明的人格设定
  */
 const generateSystemPrompt = (contextData) => `
-# Role: 资深硬件架构师 & 骨灰级装机专家 (Senior Hardware Architect)
+# Role: 资深硬件架构师 & 装机专家 (Senior Hardware Architect)
 
 ## 核心任务
 深度分析用户的电脑配置单，基于【Context Data】提供的权威数据库进行评分，并输出一份兼具专业深度与温和提醒的诊断报告。
