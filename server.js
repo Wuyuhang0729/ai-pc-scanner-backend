@@ -2,27 +2,23 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
-const compression = require('compression'); // 新增：引入压缩库
+const compression = require('compression');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. 启用 Gzip 压缩 (大幅减小文件体积)
 app.use(compression());
-
-// 2. 允许跨域和 JSON 解析
 app.use(cors());
 app.use(express.json());
 
-// 3. 托管静态网页并开启缓存
-// maxAge: '1d' 告诉浏览器：这个文件夹里的文件，1天内别再重新下载了，直接用缓存
+// [修改] 调试阶段将 maxAge 设为 0，防止浏览器缓存旧代码
+// 等项目完全定型上线后，再改回 '1d'
 app.use(express.static(path.join(__dirname, 'public'), {
-    maxAge: '1d', 
-    etag: true
+    maxAge: '0', 
+    etag: false // 关闭 ETag 也有助于强制刷新
 }));
 
-// API 转发接口 (保持不变)
 app.post('/api/analyze', async (req, res) => {
     try {
         const apiKey = process.env.DEEPSEEK_API_KEY; 
