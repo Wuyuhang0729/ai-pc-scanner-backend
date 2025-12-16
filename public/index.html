@@ -1075,9 +1075,9 @@ CPU: Intel Core Ultra 5 245KF
                 const colorMatch = lightConfig.lightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
                 const rgb = colorMatch ? `${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]}` : '255, 255, 255';
 
-                // [核心修改] 变成椭圆形：使用明确的X轴和Y轴半径值
-                const radiusX = size * 1.5; // 水平拉伸 150%
-                const radiusY = size * 0.35; // 垂直压缩 35%
+                // [核心修改] 变成极度扁平的椭圆形光带：垂直半径设置为 20%
+                const radiusX = size * 1.5; // 水平拉伸 150% (保持不变)
+                const radiusY = size * 0.20; // [核心修改] 垂直压缩 20% (原 10%)
 
                 lightEl.style.background = `radial-gradient(
                     ${radiusX}px ${radiusY}px at ${finalX}px ${finalY}px,
@@ -1093,7 +1093,7 @@ CPU: Intel Core Ultra 5 245KF
 
                 // 平滑鼠标位置
                 mouseSmoothX += (mouseCurrentX - mouseSmoothX) * lerpFactor;
-                mouseSmoothY += (mouseCurrentY - mouseCurrentY) * lerpFactor;
+                mouseSmoothY += (mouseCurrentY - mouseSmoothY) * lerpFactor;
 
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
