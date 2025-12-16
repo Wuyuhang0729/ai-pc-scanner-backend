@@ -1043,13 +1043,14 @@ CPU: Intel Core Ultra 5 245KF
                 time += 0.005;
 
                 // 2. 摇曳感 (Swaying) - 叠加多个正弦波
+                // 摇曳幅度保持 80/30
                 const swayX = Math.sin(time * 0.5) * 80 + Math.sin(time * 1.2) * 30;
                 const swayY = Math.cos(time * 0.4) * 80 + Math.cos(time * 1.5) * 30;
 
                 // 3. 呼吸感 (Breathing) - 尺寸大幅波动
                 const breathe = Math.sin(time * 0.8) * 150;
-                // [修改 1] 尺寸缩小两倍：1800 -> 900, 300 -> 150
-                const size = 900 + breathe;
+                // [修改 1] 尺寸缩小两倍：900 -> 600
+                const size = 600 + breathe;
 
                 // --- 4. 透明度闪烁 (Flicker) - 动态配置 ---
                 const lightConfig = LightConfig.get();
@@ -1066,15 +1067,20 @@ CPU: Intel Core Ultra 5 245KF
                 // 5. 最终光源定位 (固定在屏幕中间顶部)
                 // [修改 3] 圆心与上边界齐平：X轴居中，Y轴为 0
                 const finalX = (window.innerWidth / 2) + swayX;
-                const finalY = 0 + swayY;
+                // 减少 Y 轴的摆动幅度，让光晕在垂直方向更稳定
+                const finalY = 0 + (Math.cos(time * 0.4) * 15);
 
                 // 应用环境光样式
                 const lightEl = document.getElementById('ambient-light');
                 const colorMatch = lightConfig.lightColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
                 const rgb = colorMatch ? `${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]}` : '255, 255, 255';
 
+                // [核心修改] 变成椭圆形：使用明确的X轴和Y轴半径值
+                const radiusX = size * 1.5; // 水平拉伸 150%
+                const radiusY = size * 0.35; // 垂直压缩 35%
+
                 lightEl.style.background = `radial-gradient(
-                    circle ${size}px at ${finalX}px ${finalY}px,
+                    ${radiusX}px ${radiusY}px at ${finalX}px ${finalY}px,
                     rgba(${rgb}, ${opacity}) 0%, /* 0% radius, full opacity */
                     rgba(${rgb}, ${opacity * 0.95}) 30%, /* 30% radius, slight drop (Slow Decay) */
                     rgba(${rgb}, ${opacity * 0.15}) 60%, /* 60% radius, sharp drop to 15% (Rapid Decay Start) */
@@ -1087,7 +1093,7 @@ CPU: Intel Core Ultra 5 245KF
 
                 // 平滑鼠标位置
                 mouseSmoothX += (mouseCurrentX - mouseSmoothX) * lerpFactor;
-                mouseSmoothY += (mouseCurrentY - mouseSmoothY) * lerpFactor;
+                mouseSmoothY += (mouseCurrentY - mouseCurrentY) * lerpFactor;
 
                 const centerX = window.innerWidth / 2;
                 const centerY = window.innerHeight / 2;
