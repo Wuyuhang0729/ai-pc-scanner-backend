@@ -424,11 +424,13 @@
             position: absolute;
             top: 100%;
             right: 0;
-            /* [修复 1] 锚定到父元素右侧 */
+            /* 锚定到父元素右侧 */
             left: auto;
-            /* [修复 1] 保证从右侧开始定位 */
-            max-width: 280px;
-            /* [修复 1] 设置固定最大宽度 */
+            /* 保证从右侧开始定位 */
+            width: calc(100vw - 40px);
+            /* 移动端默认宽度 (屏幕宽度减去边距) */
+            max-width: 840px;
+            /* [修复 1] 增加最大宽度到 840px (约 3 倍 280px) */
             padding: 1rem;
             background-color: var(--c-card-bg);
             border: 1px solid var(--c-border);
@@ -467,6 +469,22 @@
             font-weight: 700;
             color: var(--c-text-head);
             font-family: ui-monospace, SFMono-Regular, monospace;
+        }
+
+        /* 响应式优化：在较大屏幕上，将弹出窗口限制为最大 840px，居中于问号图标下方 */
+        @media (min-width: 768px) {
+            .rules-popover {
+                left: 50%;
+                /* 居中定位 */
+                right: auto;
+                transform: translateX(-50%) translateY(10px);
+                /* 居中并保持位移 */
+            }
+
+            .rules-trigger:hover+.rules-popover,
+            .rules-popover:hover {
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         ::-webkit-scrollbar {
@@ -1074,7 +1092,7 @@ CPU: Intel Core Ultra 5 245KF
                         perspective(1000px) 
                         rotateX(${rotateX}deg) 
                         rotateY(${rotateY}deg) 
-                        /* 修复后的版本：这里不再设置 translateY(0)，避免覆盖 margin-top 逻辑 */
+                        /* 这里不再设置 translateY(0)，避免覆盖 margin-top 逻辑 */
                         `;
                 });
 
